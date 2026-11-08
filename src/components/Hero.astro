@@ -1,13 +1,15 @@
 ---
 import { useI18n } from '../i18n/index';
-import type { SiteSettings } from '../lib/cms';
+import { pick, type SiteSettings } from '../lib/cms';
 
 interface Props {
   settings: SiteSettings;
 }
 
 const { settings } = Astro.props;
-const { t } = useI18n(Astro);
+const { locale, t } = useI18n(Astro);
+const tagline = pick(settings.tagline, locale) || t('hero.tagline');
+const description = pick(settings.description, locale) || t('hero.desc');
 ---
 
 <section class="hero">
@@ -22,8 +24,8 @@ const { t } = useI18n(Astro);
     <p class="hero-greeting">{t('hero.greeting')}</p>
     <h1>{settings.name}</h1>
     <p class="role">{settings.role_title}</p>
-    <h2>{settings.tagline?.trim() ? settings.tagline : t('hero.tagline')}</h2>
-    <p class="hero-desc">{t('hero.desc')}</p>
+    <h2>{tagline}</h2>
+    <p class="hero-desc">{description}</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#proyectos">
         {t('hero.cta.projects')}

@@ -30,6 +30,13 @@ MIGRATIONS = (
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}'",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS cv_url VARCHAR(500) DEFAULT '/CV_Julian_Cano.pdf'",
     "UPDATE config SET cv_url = '/CV_Julian_Cano.pdf' WHERE cv_url IS NULL",
+    "ALTER TABLE config ADD COLUMN IF NOT EXISTS tagline_en TEXT",
+    "ALTER TABLE config ADD COLUMN IF NOT EXISTS description TEXT",
+    "ALTER TABLE config ADD COLUMN IF NOT EXISTS description_en TEXT",
+    "UPDATE config SET tagline = 'Sistemas donde convergen IA, automatización y desarrollo web' WHERE tagline IS NULL OR tagline = ''",
+    "UPDATE config SET tagline_en = 'Building systems where AI, automation and web converge' WHERE tagline_en IS NULL",
+    "UPDATE config SET description = 'Construyo sistemas que integran inteligencia artificial, automatización y desarrollo web — de la idea a producción.' WHERE description IS NULL OR description = ''",
+    "UPDATE config SET description_en = 'I build systems that integrate AI, automation and web — from idea to production.' WHERE description_en IS NULL",
 )
 
 # Backfill only on databases created before the solution refactor (they still

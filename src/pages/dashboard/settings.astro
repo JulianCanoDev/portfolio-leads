@@ -30,8 +30,20 @@ const { t } = useI18n(Astro);
         <input id="role_title" name="role_title" type="text" maxlength="200" required />
       </div>
       <div class="field">
-        <label for="tagline">{t('set.tagline')}</label>
-        <textarea id="tagline" name="tagline" maxlength="1000"></textarea>
+        <label for="tagline_es">{t('set.tagline')} (ES)</label>
+        <textarea id="tagline_es" name="tagline_es" maxlength="1000"></textarea>
+      </div>
+      <div class="field">
+        <label for="tagline_en">{t('set.tagline')} (EN)</label>
+        <textarea id="tagline_en" name="tagline_en" maxlength="1000"></textarea>
+      </div>
+      <div class="field">
+        <label for="description_es">{t('set.description')} (ES)</label>
+        <textarea id="description_es" name="description_es" maxlength="2000"></textarea>
+      </div>
+      <div class="field">
+        <label for="description_en">{t('set.description')} (EN)</label>
+        <textarea id="description_en" name="description_en" maxlength="2000"></textarea>
       </div>
 
       <div class="color-row">
@@ -117,7 +129,10 @@ const { t } = useI18n(Astro);
   const inputs = {
     name: document.getElementById('name') as HTMLInputElement,
     role_title: document.getElementById('role_title') as HTMLInputElement,
-    tagline: document.getElementById('tagline') as HTMLTextAreaElement,
+    tagline_es: document.getElementById('tagline_es') as HTMLTextAreaElement,
+    tagline_en: document.getElementById('tagline_en') as HTMLTextAreaElement,
+    description_es: document.getElementById('description_es') as HTMLTextAreaElement,
+    description_en: document.getElementById('description_en') as HTMLTextAreaElement,
     linkedin_url: document.getElementById('linkedin_url') as HTMLInputElement,
     github_url: document.getElementById('github_url') as HTMLInputElement,
     whatsapp_phone: document.getElementById('whatsapp_phone') as HTMLInputElement,
@@ -187,7 +202,7 @@ const { t } = useI18n(Astro);
   function refreshPreview() {
     pvName.textContent = inputs.name.value || '—';
     pvRole.textContent = inputs.role_title.value || '';
-    pvTagline.textContent = inputs.tagline.value || '';
+    pvTagline.textContent = inputs.tagline_es.value || inputs.tagline_en.value || '';
     preview.style.setProperty('--accent', accent.value);
     preview.style.setProperty('--accent-glow', towardWhite(accent.value, 0.28));
     preview.style.setProperty('--accent-soft', towardWhite(accent.value, 0.6));
@@ -214,6 +229,13 @@ const { t } = useI18n(Astro);
 
   function fill(data: Record<string, unknown>) {
     for (const [key, input] of Object.entries(inputs)) {
+      if (key.endsWith('_es') || key.endsWith('_en')) {
+        const base = key.slice(0, -3);
+        const loc = key.slice(-2);
+        const localized = data[base] as { es?: string; en?: string } | undefined;
+        input.value = localized?.[loc] ?? '';
+        continue;
+      }
       input.value = (data[key] as string) ?? '';
     }
     skills = Array.isArray(data.skills) ? (data.skills as string[]) : [];
@@ -243,7 +265,10 @@ const { t } = useI18n(Astro);
       const body = {
         name: inputs.name.value.trim(),
         role_title: inputs.role_title.value.trim(),
-        tagline: inputs.tagline.value.trim(),
+        tagline_es: (inputs.tagline_es as unknown as HTMLInputElement).value.trim() || null,
+        tagline_en: (inputs.tagline_en as unknown as HTMLInputElement).value.trim() || null,
+        description_es: (inputs.description_es as unknown as HTMLInputElement).value.trim() || null,
+        description_en: (inputs.description_en as unknown as HTMLInputElement).value.trim() || null,
         accent_color: accent.value,
         secondary_color: secondary.value,
         linkedin_url: inputs.linkedin_url.value.trim(),

@@ -5,7 +5,7 @@ import Projects from '../components/Projects.astro';
 import Skills from '../components/Skills.astro';
 import CvSection from '../components/CvSection.astro';
 import Contact from '../components/Contact.astro';
-import { getSettings, getProjects, paletteVars } from '../lib/cms';
+import { getSettings, getProjects, paletteVars, pick } from '../lib/cms';
 
 const settings = await getSettings();
 const projects = await getProjects();
@@ -17,7 +17,7 @@ const paletteStyle = Object.entries(paletteVars(settings.accent_color, settings.
 
 <Layout
   title={`${settings.name} — ${settings.role_title}`}
-  description={`${settings.name} — ${settings.role_title}. ${settings.tagline}`}
+  description={`${settings.name} — ${settings.role_title}. ${pick(settings.tagline, 'es') ?? ''}`}
   navName={settings.name}
   navRole={settings.role_title}
   navCvHref={settings.cv_url || undefined}

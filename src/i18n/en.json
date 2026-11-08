@@ -167,5 +167,6 @@
   "set.cv.none": "No CV — the CV section is hidden on the portfolio",
   "set.cv.ok": "CV updated ✓",
   "set.cv.error": "Couldn't upload the CV",
-  "padmin.f.color": "Color"
+  "padmin.f.color": "Color",
+  "set.description": "Description"
 }

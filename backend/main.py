@@ -85,7 +85,8 @@ class StatsOut(BaseModel):
 class SettingsOut(BaseModel):
     name: str
     role_title: str
-    tagline: str
+    tagline: dict
+    description: dict
     accent_color: str
     secondary_color: str
     linkedin_url: str
@@ -95,13 +96,33 @@ class SettingsOut(BaseModel):
     skills: list[str]
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+
+def settings_out(c) -> dict:
+    return {
+        "name": c.name,
+        "role_title": c.role_title,
+        "tagline": {"es": c.tagline, "en": c.tagline_en},
+        "description": {"es": c.description, "en": c.description_en},
+        "accent_color": c.accent_color,
+        "secondary_color": c.secondary_color,
+        "linkedin_url": c.linkedin_url,
+        "github_url": c.github_url,
+        "whatsapp_phone": c.whatsapp_phone,
+        "cv_url": c.cv_url,
+        "skills": c.skills or [],
+        "updated_at": c.updated_at,
+    }
 
 
 class SettingsIn(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     role_title: str | None = Field(default=None, min_length=1, max_length=200)
     tagline: str | None = Field(default=None, max_length=1000)
+    tagline_es: str | None = Field(default=None, max_length=1000)
+    tagline_en: str | None = Field(default=None, max_length=1000)
+    description: str | None = Field(default=None, max_length=2000)
+    description_es: str | None = Field(default=None, max_length=2000)
+    description_en: str | None = Field(default=None, max_length=2000)
     accent_color: str | None = Field(default=None, pattern=HEX_COLOR)
     secondary_color: str | None = Field(default=None, pattern=HEX_COLOR)
     linkedin_url: str | None = Field(default=None, max_length=255)
@@ -112,12 +133,14 @@ class SettingsIn(BaseModel):
 
 
 def _legacy_to_es(data: dict) -> dict:
-    """Agent compatibility: flat title/category/challenge/solution fill the ES fields."""
+    """Agent compatibility: flat localized fields fill the ES counterparts."""
     for legacy, es in (
         ("title", "title_es"),
         ("category", "category_es"),
         ("challenge", "challenge_es"),
         ("solution", "solution_es"),
+        ("tagline", "tagline_es"),
+        ("description", "description_es"),
     ):
         if legacy in data and data.get(es) is None:
             data[es] = data[legacy]
@@ -401,18 +424,19 @@ async def stats(db: AsyncSession = Depends(get_db)):
 # ---------- Settings (CMS) — lectura pública, escritura autenticada ----------
 @app.get("/api/settings", response_model=SettingsOut)
 async def get_settings_row(db: AsyncSession = Depends(get_db)):
-    return await get_config_row(db)
+    return settings_out(await get_config_row(db))
 
 
 @app.put("/api/settings", response_model=SettingsOut, dependencies=[Depends(require_admin)])
 async def update_settings(data: SettingsIn, db: AsyncSession = Depends(get_db)):
     config = await get_config_row(db)
-    changes = data.model_dump(exclude_unset=True)
+    changes = _legacy_to_es(data.model_dump(exclude_unset=True))
     for field, value in changes.items():
-        setattr(config, field, value)
+        if field in ("tagline_es", "tagline_en", "description_es", "description_en", "tagline", "description"):
+            setattr(config, field, value)
     await db.commit()
     await db.refresh(config)
-    return config
+    return settings_out(config)
 
 
 @app.post(
@@ -428,7 +452,7 @@ async def reset_settings(db: AsyncSession = Depends(get_db)):
         setattr(config, column.name, column.default.arg if column.default else None)
     await db.commit()
     await db.refresh(config)
-    return config
+    return settings_out(config)
 
 
 # ---------- Projects (CMS) — lectura pública, escritura autenticada ----------

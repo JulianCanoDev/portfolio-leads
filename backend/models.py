@@ -35,8 +35,23 @@ class Config(Base):
     )
     tagline: Mapped[str] = mapped_column(
         Text,
-        default="",
-        server_default="",
+        default="Sistemas donde convergen IA, automatización y desarrollo web",
+        server_default="Sistemas donde convergen IA, automatización y desarrollo web",
+    )
+    tagline_en: Mapped[str] = mapped_column(
+        Text,
+        default="Building systems where AI, automation and web converge",
+        server_default="Building systems where AI, automation and web converge",
+    )
+    description: Mapped[str] = mapped_column(
+        Text,
+        default="Construyo sistemas que integran inteligencia artificial, automatización y desarrollo web — de la idea a producción.",
+        server_default="Construyo sistemas que integran inteligencia artificial, automatización y desarrollo web — de la idea a producción.",
+    )
+    description_en: Mapped[str] = mapped_column(
+        Text,
+        default="I build systems that integrate AI, automation and web — from idea to production.",
+        server_default="I build systems that integrate AI, automation and web — from idea to production.",
     )
     accent_color: Mapped[str] = mapped_column(String(7), default="#6d28d9", server_default="#6d28d9")
     secondary_color: Mapped[str] = mapped_column(

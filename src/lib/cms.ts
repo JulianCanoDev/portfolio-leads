@@ -1,10 +1,13 @@
 // CMS data: defaults + server-side fetchers with fallback, so the public
 // portfolio renders even without a reachable backend (local dev).
 
+export interface Localized2 {}
+
 export interface SiteSettings {
   name: string;
   role_title: string;
-  tagline: string;
+  tagline: Localized;
+  description: Localized;
   accent_color: string;
   secondary_color: string;
   linkedin_url: string;
@@ -41,7 +44,14 @@ export function pick(field: Localized | null | undefined, locale: string): strin
 export const DEFAULT_SETTINGS: SiteSettings = {
   name: 'Julian Cano',
   role_title: 'Full Stack & AI Developer | AWS Cloud | AI Automation & Agents',
-  tagline: '',
+  tagline: {
+    es: 'Sistemas donde convergen IA, automatización y desarrollo web',
+    en: 'Building systems where AI, automation and web converge',
+  },
+  description: {
+    es: 'Construyo sistemas que integran inteligencia artificial, automatización y desarrollo web — de la idea a producción.',
+    en: 'I build systems that integrate AI, automation and web — from idea to production.',
+  },
   accent_color: '#6d28d9',
   secondary_color: '#0d9488',
   linkedin_url: 'https://www.linkedin.com/in/juliancanodev/',
