@@ -29,22 +29,50 @@ const { t } = useI18n(Astro);
   <section class="proj-editor" id="editor" hidden>
     <h2 class="editor-title" id="editorTitle">{t('padmin.editor.new')}</h2>
     <form class="form" id="projForm">
-      <div class="field">
-        <label for="p_title">{t('padmin.f.title')}</label>
-        <input id="p_title" type="text" maxlength="200" required />
+      <div class="lang-toggle editor-lang" role="group" aria-label="Language">
+        <button class="lang-btn active" type="button" data-form-lang="es">ES</button>
+        <span class="lang-sep">/</span>
+        <button class="lang-btn" type="button" data-form-lang="en">EN</button>
       </div>
-      <div class="field">
-        <label for="p_category">{t('padmin.f.category')}</label>
-        <input id="p_category" type="text" maxlength="100" placeholder={t('padmin.f.category.ph')} />
+
+      <div class="form-lang" data-lang-pane="es">
+        <div class="field">
+          <label for="p_title_es">{t('padmin.f.title')} (ES)</label>
+          <input id="p_title_es" type="text" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label for="p_category_es">{t('padmin.f.category')} (ES)</label>
+          <input id="p_category_es" type="text" maxlength="100" placeholder={t('padmin.f.category.ph')} />
+        </div>
+        <div class="field">
+          <label for="p_challenge_es">{t('padmin.f.challenge')} (ES)</label>
+          <textarea id="p_challenge_es" maxlength="5000"></textarea>
+        </div>
+        <div class="field">
+          <label for="p_solution_es">{t('padmin.f.solution')} (ES)</label>
+          <textarea id="p_solution_es" maxlength="5000"></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label for="p_challenge">{t('padmin.f.challenge')}</label>
-        <textarea id="p_challenge" maxlength="5000"></textarea>
+
+      <div class="form-lang" data-lang-pane="en" hidden>
+        <div class="field">
+          <label for="p_title_en">{t('padmin.f.title')} (EN)</label>
+          <input id="p_title_en" type="text" maxlength="200" />
+        </div>
+        <div class="field">
+          <label for="p_category_en">{t('padmin.f.category')} (EN)</label>
+          <input id="p_category_en" type="text" maxlength="100" />
+        </div>
+        <div class="field">
+          <label for="p_challenge_en">{t('padmin.f.challenge')} (EN)</label>
+          <textarea id="p_challenge_en" maxlength="5000"></textarea>
+        </div>
+        <div class="field">
+          <label for="p_solution_en">{t('padmin.f.solution')} (EN)</label>
+          <textarea id="p_solution_en" maxlength="5000"></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label for="p_solution">{t('padmin.f.solution')}</label>
-        <textarea id="p_solution" maxlength="5000"></textarea>
-      </div>
+
       <div class="field">
         <label for="p_stack">{t('padmin.f.stack')}</label>
         <input id="p_stack" type="text" maxlength="2000" placeholder={t('padmin.f.stack.ph')} />
@@ -54,6 +82,15 @@ const { t } = useI18n(Astro);
         <div class="chip-input" id="chipBox">
           <span class="chips" id="tagChips"></span>
           <input id="p_tag_input" type="text" placeholder={t('padmin.f.tags.ph')} />
+        </div>
+      </div>
+      <div class="color-row">
+        <div class="field color-field">
+          <label for="p_color">{t('padmin.f.color')}</label>
+          <div class="color-input">
+            <input id="p_color" type="color" value="#6d28d9" />
+            <input id="p_color_hex" type="text" maxlength="7" aria-label="Hex" />
+          </div>
         </div>
       </div>
       <div class="field">
@@ -75,15 +112,21 @@ const { t } = useI18n(Astro);
 <script>
   import { t } from '../../i18n/index';
 
+  interface Localized {
+    es: string | null;
+    en: string | null;
+  }
+
   interface Project {
     id: number;
-    title: string;
-    category: string;
-    challenge: string | null;
-    solution: string | null;
+    title: Localized;
+    category: Localized;
+    challenge: Localized;
+    solution: Localized;
     stack: string | null;
     tags: string[];
     image_url: string | null;
+    color: string | null;
   }
 
   const list = document.getElementById('projList')!;
@@ -93,15 +136,24 @@ const { t } = useI18n(Astro);
   const status = document.getElementById('projStatus');
   const saveBtn = document.getElementById('saveProjBtn') as HTMLButtonElement;
 
+  const el = (id: string) => document.getElementById(id) as HTMLInputElement;
+
   const f = {
-    title: document.getElementById('p_title') as HTMLInputElement,
-    category: document.getElementById('p_category') as HTMLInputElement,
-    challenge: document.getElementById('p_challenge') as HTMLTextAreaElement,
-    solution: document.getElementById('p_solution') as HTMLTextAreaElement,
-    stack: document.getElementById('p_stack') as HTMLInputElement,
-    image: document.getElementById('p_image') as HTMLInputElement,
-    tagInput: document.getElementById('p_tag_input') as HTMLInputElement,
+    title_es: el('p_title_es'),
+    title_en: el('p_title_en'),
+    category_es: el('p_category_es'),
+    category_en: el('p_category_en'),
+    challenge_es: el('p_challenge_es') as HTMLTextAreaElement,
+    challenge_en: el('p_challenge_en') as HTMLTextAreaElement,
+    solution_es: el('p_solution_es') as HTMLTextAreaElement,
+    solution_en: el('p_solution_en') as HTMLTextAreaElement,
+    stack: el('p_stack'),
+    image: el('p_image'),
+    tagInput: el('p_tag_input'),
+    color: el('p_color'),
+    colorHex: el('p_color_hex'),
   };
+
   const chipsBox = document.getElementById('tagChips')!;
   const preview = document.getElementById('p_image_preview') as HTMLImageElement;
 
@@ -110,6 +162,19 @@ const { t } = useI18n(Astro);
   let tags: string[] = [];
   let pendingFile: File | null = null;
   let keepImageUrl: string | null = null;
+
+  // ES/EN form toggle — switches the visible pane (acts as per-language preview)
+  document.querySelectorAll<HTMLButtonElement>('[data-form-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lang = btn.dataset.formLang === 'en' ? 'en' : 'es';
+      document.querySelectorAll<HTMLButtonElement>('[data-form-lang]').forEach((b) =>
+        b.classList.toggle('active', b === btn),
+      );
+      document.querySelectorAll<HTMLElement>('[data-lang-pane]').forEach((pane) => {
+        pane.hidden = pane.dataset.langPane !== lang;
+      });
+    });
+  });
 
   function showStatus(text: string, color: string) {
     if (status) {
@@ -167,13 +232,29 @@ const { t } = useI18n(Astro);
     }
   });
 
+  f.color.addEventListener('input', () => {
+    f.colorHex.value = f.color.value;
+  });
+  f.colorHex.addEventListener('input', () => {
+    if (/^#[0-9a-fA-F]{6}$/.test(f.colorHex.value)) f.color.value = f.colorHex.value.toLowerCase();
+  });
+
   function openEditor(project: Project | null) {
     editingId = project?.id ?? null;
-    editorTitle.textContent = project ? t('padmin.editor.edit', { title: project.title }) : t('padmin.editor.new');
-    f.title.value = project?.title ?? '';
-    f.category.value = project?.category ?? 'Web';
-    f.challenge.value = project?.challenge ?? '';
-    f.solution.value = project?.solution ?? '';
+    editorTitle.textContent = project
+      ? t('padmin.editor.edit', { title: project.title.es ?? '' })
+      : t('padmin.editor.new');
+    const set = (input: HTMLInputElement | HTMLTextAreaElement, v: string | null) => {
+      input.value = v ?? '';
+    };
+    set(f.title_es, project?.title.es ?? '');
+    set(f.title_en, project?.title.en ?? '');
+    set(f.category_es, project?.category.es ?? '');
+    set(f.category_en, project?.category.en ?? '');
+    set(f.challenge_es, project?.challenge.es ?? '');
+    set(f.challenge_en, project?.challenge.en ?? '');
+    set(f.solution_es, project?.solution.es ?? '');
+    set(f.solution_en, project?.solution.en ?? '');
     f.stack.value = project?.stack ?? '';
     tags = project ? [...project.tags] : [];
     renderChips();
@@ -182,10 +263,13 @@ const { t } = useI18n(Astro);
     keepImageUrl = project?.image_url ?? null;
     preview.src = keepImageUrl ?? '';
     preview.hidden = !keepImageUrl;
+    const color = project?.color ?? '#6d28d9';
+    f.color.value = color;
+    f.colorHex.value = color;
     showStatus('', '');
     editor.hidden = false;
     editor.scrollIntoView({ behavior: 'smooth' });
-    f.title.focus();
+    f.title_es.focus();
   }
 
   document.getElementById('newBtn')?.addEventListener('click', () => openEditor(null));
@@ -195,7 +279,7 @@ const { t } = useI18n(Astro);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!f.title.value.trim()) return;
+    if (!f.title_es.value.trim()) return;
     saveBtn.disabled = true;
     showStatus(t('padmin.saving'), '#9b9bab');
 
@@ -210,13 +294,18 @@ const { t } = useI18n(Astro);
       }
 
       const body = {
-        title: f.title.value.trim(),
-        category: f.category.value.trim() || 'Web',
-        challenge: f.challenge.value.trim() || null,
-        solution: f.solution.value.trim() || null,
+        title_es: f.title_es.value.trim(),
+        title_en: f.title_en.value.trim() || null,
+        category_es: f.category_es.value.trim() || 'Web',
+        category_en: f.category_en.value.trim() || null,
+        challenge_es: f.challenge_es.value.trim() || null,
+        challenge_en: f.challenge_en.value.trim() || null,
+        solution_es: f.solution_es.value.trim() || null,
+        solution_en: f.solution_en.value.trim() || null,
         stack: f.stack.value.trim() || null,
         tags,
         image_url,
+        color: f.color.value,
       };
       const res = await fetch(editingId ? `/api/projects/${editingId}` : '/api/projects', {
         method: editingId ? 'PUT' : 'POST',
@@ -255,7 +344,7 @@ const { t } = useI18n(Astro);
 
       const handle = document.createElement('span');
       handle.className = 'drag-handle';
-      handle.title = 'Arrastrá para reordenar';
+      handle.title = t('padmin.sub');
       handle.textContent = '⠿';
 
       const thumb = document.createElement('div');
@@ -263,17 +352,22 @@ const { t } = useI18n(Astro);
       if (project.image_url) {
         const img = document.createElement('img');
         img.src = project.image_url;
-        img.alt = project.title;
+        img.alt = project.title.es ?? '';
         thumb.appendChild(img);
       }
 
       const info = document.createElement('div');
       info.className = 'proj-info';
       const title = document.createElement('h3');
-      title.textContent = project.title;
+      title.textContent = project.title.es ?? '';
       const cat = document.createElement('span');
       cat.className = 'cat ai';
-      cat.textContent = project.category;
+      if (project.color) {
+        cat.style.color = project.color;
+        cat.style.borderColor = `${project.color}55`;
+        cat.style.background = `${project.color}1f`;
+      }
+      cat.textContent = project.category.es ?? '';
       info.append(title, cat);
 
       const actions = document.createElement('div');
@@ -287,7 +381,7 @@ const { t } = useI18n(Astro);
       delBtn.textContent = '×';
       delBtn.title = t('padmin.delete');
       delBtn.addEventListener('click', async () => {
-        if (!window.confirm(t('padmin.confirm.delete', { title: project.title }))) return;
+        if (!window.confirm(t('padmin.confirm.delete', { title: project.title.es ?? '' }))) return;
         delBtn.disabled = true;
         const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE', credentials: 'same-origin' });
         if (res.ok) await load();
@@ -300,7 +394,6 @@ const { t } = useI18n(Astro);
     });
   }
 
-  // Drag & drop reorder
   let dragId: number | null = null;
   list.addEventListener('dragstart', (e) => {
     const row = (e.target as HTMLElement).closest('.proj-row');

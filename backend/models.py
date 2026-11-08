@@ -69,14 +69,19 @@ class Project(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200))
+    title_en: Mapped[str | None] = mapped_column(String(200), nullable=True)
     category: Mapped[str] = mapped_column(String(100), default="Web", server_default="Web")
+    category_en: Mapped[str | None] = mapped_column(String(100), nullable=True)
     challenge: Mapped[str | None] = mapped_column(Text, nullable=True)
+    challenge_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     solution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    solution_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     stack: Mapped[str | None] = mapped_column(Text, nullable=True)
     tags: Mapped[list[str]] = mapped_column(
         ARRAY(String), default=list, server_default="{}"
     )
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

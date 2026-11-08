@@ -1,6 +1,6 @@
 ---
-import { translate, useI18n } from '../i18n/index';
-import type { CmsProject } from '../lib/cms';
+import { useI18n } from '../i18n/index';
+import { pick, type CmsProject } from '../lib/cms';
 
 interface Props {
   projects: CmsProject[];
@@ -9,42 +9,14 @@ interface Props {
 const { projects } = Astro.props;
 const { locale, t } = useI18n(Astro);
 
-// Showcase projects carry per-locale translations in the dictionaries.
-// A DB field uses the translation only while it still matches the Spanish
-// canonical text — once the owner edits it in the CMS, the DB value wins.
-const PROJECT_SLUGS: { token: string; slug: string }[] = [
-  { token: 'researcher', slug: 'researcher' },
-  { token: 'openseo', slug: 'openseo' },
-  { token: 'colombia', slug: 'colombia' },
-  { token: 'biology', slug: 'biology-lab-vr' },
-  { token: 'synapse', slug: 'synapse-vr' },
-  { token: 'projectech', slug: 'projectech-bi' },
-];
-
-function projectSlug(title: string): string | null {
-  const s = title.toLowerCase();
-  const match = PROJECT_SLUGS.find((p) => s.includes(p.token));
-  return match?.slug ?? null;
-}
-
-function localizedField(slug: string | null, field: string, value: string | null): string | null {
-  if (!value || !slug) return value;
-  const esCanonical = translate('es', `projects.${slug}.${field}`);
-  if (value !== esCanonical) return value;
-  return t(`projects.${slug}.${field}`);
-}
-
-function localizedProject(project: CmsProject) {
-  const slug = projectSlug(project.title);
-  return {
-    ...project,
-    challenge: localizedField(slug, 'challenge', project.challenge),
-    solution: localizedField(slug, 'solution', project.solution),
-    stack: localizedField(slug, 'stack', project.stack),
-  };
-}
-
-const localized = projects.map(localizedProject);
+// Bilingual CMS fields: each project stores {es, en}; missing EN falls back to ES.
+const localized = projects.map((project) => ({
+  ...project,
+  title: pick(project.title, locale) ?? '',
+  category: pick(project.category, locale) ?? '',
+  challenge: pick(project.challenge, locale),
+  solution: pick(project.solution, locale),
+}));
 
 const FALLBACK_COVER = `<svg viewBox="0 0 480 270" aria-hidden="true">
   <rect width="480" height="270" fill="#0d0d16"/>
@@ -115,7 +87,10 @@ const payload = Object.fromEntries(
               </div>
               <div class="case-body">
                 <div class="case-top">
-                  <span class={`cat ${catClass(project.category)}`}>{project.category}</span>
+                  <span
+                    class={`cat ${catClass(project.category)}`}
+                    style={project.color ? `color:${project.color};border-color:${project.color}55;background:${project.color}1f` : undefined}
+                  >{project.category}</span>
                 </div>
                 <h3>{project.title}</h3>
                 {project.challenge && (

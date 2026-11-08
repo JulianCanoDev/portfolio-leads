@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,15 +111,49 @@ class SettingsIn(BaseModel):
     skills: list[str] | None = Field(default=None, max_length=50)
 
 
+def _legacy_to_es(data: dict) -> dict:
+    """Agent compatibility: flat title/category/challenge/solution fill the ES fields."""
+    for legacy, es in (
+        ("title", "title_es"),
+        ("category", "category_es"),
+        ("challenge", "challenge_es"),
+        ("solution", "solution_es"),
+    ):
+        if legacy in data and data.get(es) is None:
+            data[es] = data[legacy]
+    return data
+
+
 class ProjectIn(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
-    category: str = Field(default="Web", max_length=100)
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    category: str | None = Field(default=None, min_length=1, max_length=100)
     challenge: str | None = Field(default=None, max_length=5000)
     solution: str | None = Field(default=None, max_length=5000)
+    title_es: str | None = Field(default=None, min_length=1, max_length=200)
+    title_en: str | None = Field(default=None, min_length=1, max_length=200)
+    category_es: str | None = Field(default=None, min_length=1, max_length=100)
+    category_en: str | None = Field(default=None, min_length=1, max_length=100)
+    challenge_es: str | None = Field(default=None, max_length=5000)
+    challenge_en: str | None = Field(default=None, max_length=5000)
+    solution_es: str | None = Field(default=None, max_length=5000)
+    solution_en: str | None = Field(default=None, max_length=5000)
     stack: str | None = Field(default=None, max_length=2000)
     tags: list[str] = Field(default_factory=list, max_length=20)
     image_url: str | None = Field(default=None, max_length=500)
+    color: str | None = Field(default=None, pattern=HEX_COLOR)
     sort_order: int | None = None
+
+    @model_validator(mode="after")
+    def _merge_legacy(self):
+        if self.title_es is None and self.title:
+            self.title_es = self.title
+        if self.category_es is None and self.category:
+            self.category_es = self.category
+        if self.challenge_es is None and self.challenge:
+            self.challenge_es = self.challenge
+        if self.solution_es is None and self.solution:
+            self.solution_es = self.solution
+        return self
 
 
 class ProjectCreateOut(BaseModel):
@@ -134,26 +168,51 @@ class ProjectPatchIn(BaseModel):
     category: str | None = Field(default=None, min_length=1, max_length=100)
     challenge: str | None = Field(default=None, max_length=5000)
     solution: str | None = Field(default=None, max_length=5000)
+    title_es: str | None = Field(default=None, min_length=1, max_length=200)
+    title_en: str | None = Field(default=None, min_length=1, max_length=200)
+    category_es: str | None = Field(default=None, min_length=1, max_length=100)
+    category_en: str | None = Field(default=None, min_length=1, max_length=100)
+    challenge_es: str | None = Field(default=None, max_length=5000)
+    challenge_en: str | None = Field(default=None, max_length=5000)
+    solution_es: str | None = Field(default=None, max_length=5000)
+    solution_en: str | None = Field(default=None, max_length=5000)
     stack: str | None = Field(default=None, max_length=2000)
     tags: list[str] | None = Field(default=None, max_length=20)
     image_url: str | None = Field(default=None, max_length=500)
+    color: str | None = Field(default=None, pattern=HEX_COLOR)
     sort_order: int | None = None
+
+
+def project_out(p) -> dict:
+    return {
+        "id": p.id,
+        "title": {"es": p.title, "en": p.title_en},
+        "category": {"es": p.category, "en": p.category_en},
+        "challenge": {"es": p.challenge, "en": p.challenge_en},
+        "solution": {"es": p.solution, "en": p.solution_en},
+        "stack": p.stack,
+        "tags": p.tags or [],
+        "image_url": p.image_url,
+        "color": p.color,
+        "sort_order": p.sort_order,
+        "created_at": p.created_at,
+        "updated_at": p.updated_at,
+    }
 
 
 class ProjectOut(BaseModel):
     id: int
-    title: str
-    category: str
-    challenge: str | None
-    solution: str | None
+    title: dict
+    category: dict
+    challenge: dict
+    solution: dict
     stack: str | None
     tags: list[str]
     image_url: str | None
+    color: str | None
     sort_order: int
     created_at: datetime
     updated_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class ReorderIn(BaseModel):
@@ -378,7 +437,7 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
     projects = (
         await db.scalars(select(Project).order_by(Project.sort_order, Project.id))
     ).all()
-    return [ProjectOut.model_validate(project) for project in projects]
+    return [project_out(project) for project in projects]
 
 
 @app.get("/api/projects/{project_id}", response_model=ProjectOut)
@@ -386,7 +445,7 @@ async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
     project = await db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    return project
+    return project_out(project)
 
 
 @app.post(
@@ -398,13 +457,18 @@ async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
 async def create_project(data: ProjectIn, db: AsyncSession = Depends(get_db)):
     max_order = (await db.scalar(select(func.max(Project.sort_order)))) or 0
     project = Project(
-        title=data.title.strip(),
-        category=data.category.strip() or "Web",
-        challenge=data.challenge,
-        solution=data.solution,
+        title=(data.title_es or data.title or "").strip() or "Untitled",
+        title_en=data.title_en.strip() if data.title_en else None,
+        category=(data.category_es or data.category or "").strip() or "Web",
+        category_en=data.category_en.strip() if data.category_en else None,
+        challenge=data.challenge_es if data.challenge_es is not None else data.challenge,
+        challenge_en=data.challenge_en,
+        solution=data.solution_es if data.solution_es is not None else data.solution,
+        solution_en=data.solution_en,
         stack=data.stack,
         tags=[t.strip() for t in data.tags if t.strip()],
         image_url=data.image_url,
+        color=data.color,
         sort_order=data.sort_order if data.sort_order is not None else max_order + 1,
     )
     db.add(project)
@@ -427,16 +491,21 @@ async def update_project(project_id: int, data: ProjectIn, db: AsyncSession = De
     project = await db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    project.title = data.title.strip()
-    project.category = data.category.strip() or "Web"
-    project.challenge = data.challenge
-    project.solution = data.solution
+    project.title = (data.title_es or data.title or "").strip() or "Untitled"
+    project.title_en = data.title_en.strip() if data.title_en else None
+    project.category = (data.category_es or data.category or "").strip() or "Web"
+    project.category_en = data.category_en.strip() if data.category_en else None
+    project.challenge = data.challenge_es if data.challenge_es is not None else data.challenge
+    project.challenge_en = data.challenge_en
+    project.solution = data.solution_es if data.solution_es is not None else data.solution
+    project.solution_en = data.solution_en
     project.stack = data.stack
     project.tags = [t.strip() for t in data.tags if t.strip()]
     project.image_url = data.image_url
+    project.color = data.color
     await db.commit()
     await db.refresh(project)
-    return project
+    return project_out(project)
 
 
 @app.patch(
@@ -453,7 +522,7 @@ async def reorder_projects(data: ReorderIn, db: AsyncSession = Depends(get_db)):
     projects = (
         await db.scalars(select(Project).order_by(Project.sort_order, Project.id))
     ).all()
-    return [ProjectOut.model_validate(project) for project in projects]
+    return [project_out(project) for project in projects]
 
 
 @app.patch(
@@ -465,19 +534,19 @@ async def patch_project(project_id: int, data: ProjectPatchIn, db: AsyncSession 
     project = await db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    changes = data.model_dump(exclude_unset=True)
-    if "title" in changes and changes["title"]:
-        project.title = changes["title"].strip()
-    if "category" in changes and changes["category"]:
-        project.category = changes["category"].strip()
+    changes = _legacy_to_es(data.model_dump(exclude_unset=True))
     if "tags" in changes and changes["tags"] is not None:
         project.tags = [t.strip() for t in changes["tags"] if t.strip()]
-    for field in ("challenge", "solution", "stack", "image_url", "sort_order"):
+    for field in (
+        "title_es", "title_en", "category_es", "category_en",
+        "challenge_es", "challenge_en", "solution_es", "solution_en",
+        "stack", "image_url", "sort_order", "color",
+    ):
         if field in changes:
             setattr(project, field, changes[field])
     await db.commit()
     await db.refresh(project)
-    return project
+    return project_out(project)
 
 
 @app.delete("/api/projects/{project_id}", dependencies=[Depends(require_admin)])

@@ -14,16 +14,28 @@ export interface SiteSettings {
   skills: string[];
 }
 
+export interface Localized {
+  es: string | null;
+  en: string | null;
+}
+
 export interface CmsProject {
   id: number;
-  title: string;
-  category: string;
-  challenge: string | null;
-  solution: string | null;
+  title: Localized;
+  category: Localized;
+  challenge: Localized;
+  solution: Localized;
   stack: string | null;
   tags: string[];
   image_url: string | null;
+  color: string | null;
   sort_order: number;
+}
+
+export function pick(field: Localized | null | undefined, locale: string): string | null {
+  if (!field) return null;
+  if (locale === 'en') return field.en ?? field.es;
+  return field.es ?? field.en;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -42,36 +54,56 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 export const DEFAULT_PROJECTS: CmsProject[] = [
   {
     id: -1,
-    title: 'Researcher App',
-    category: 'Automation',
-    challenge:
-      'Scraping de empleos y remates judiciales desde fuentes dispares (gov, portales). Deduplicación, clasificación y envío masivo diario por WhatsApp.',
-    solution: '+87 reportes enviados, 3+ digests diarios (empleos, remates, tendencias). Automatización completa headless.',
+    title: { es: 'Researcher App', en: 'Researcher App' },
+    category: { es: 'Automation', en: 'Automation' },
+    challenge: {
+      es: 'Scraping de empleos y remates judiciales desde fuentes dispares (gov, portales). Deduplicación, clasificación y envío masivo diario por WhatsApp.',
+      en: 'Scraping job listings and judicial auctions from disparate sources (gov sites, portals). Deduplication, classification, and daily mass delivery via WhatsApp.',
+    },
+    solution: {
+      es: '+87 reportes enviados, 3+ digests diarios (empleos, remates, tendencias). Automatización completa headless.',
+      en: '+87 reports sent, 3+ daily digests (jobs, auctions, trends). Fully headless automation.',
+    },
     stack: 'Next.js · Celery · PostgreSQL · Redis · Evolution API · DataForSEO',
     tags: ['Automation', 'Scraping', 'WhatsApp'],
     image_url: '/images/researcher-app.webp',
+    color: '#2dd4bf',
     sort_order: 0,
   },
   {
     id: -2,
-    title: 'OpenSEO Toolkit',
-    category: 'Web',
-    challenge: 'Desplegar y mantener un SEO toolkit self-hosted integrado con MCP para consultas desde el asistente AI.',
-    solution: 'Instancia operativa con health checks automáticos, monitoreo vía Uptime Kuma, integración con AI vía MCP.',
+    title: { es: 'OpenSEO Toolkit', en: 'OpenSEO Toolkit' },
+    category: { es: 'Web', en: 'Web' },
+    challenge: {
+      es: 'Desplegar y mantener un SEO toolkit self-hosted integrado con MCP para consultas desde el asistente AI.',
+      en: 'Deploy and maintain a self-hosted SEO toolkit integrated with MCP for AI assistant queries.',
+    },
+    solution: {
+      es: 'Instancia operativa con health checks automáticos, monitoreo vía Uptime Kuma, integración con AI vía MCP.',
+      en: 'Live instance with automated health checks, Uptime Kuma monitoring, AI integration via MCP.',
+    },
     stack: 'Pterodactyl · Docker · DataForSEO API · MCP · Uptime Kuma',
     tags: ['SEO', 'Self-hosted', 'Docker'],
     image_url: '/images/openseo.webp',
+    color: '#7dd3fc',
     sort_order: 1,
   },
   {
     id: -3,
-    title: 'Colombia Aprende + AWS',
-    category: 'Cloud',
-    challenge: 'Participación en el convenio Alcaldía de Bogotá y AWS para formación en tecnologías cloud.',
-    solution: 'Formación oficial en cloud computing. Aplicación práctica en infraestructura de proyectos reales.',
+    title: { es: 'Colombia Aprende + AWS', en: 'Colombia Aprende + AWS' },
+    category: { es: 'Cloud', en: 'Cloud' },
+    challenge: {
+      es: 'Participación en el convenio Alcaldía de Bogotá y AWS para formación en tecnologías cloud.',
+      en: "Participation in the Bogotá Mayor's Office and AWS agreement for cloud technology training.",
+    },
+    solution: {
+      es: 'Formación oficial en cloud computing. Aplicación práctica en infraestructura de proyectos reales.',
+      en: 'Official cloud computing training. Hands-on application in real project infrastructure.',
+    },
     stack: 'AWS · Cloud Infrastructure',
     tags: ['AWS', 'Cloud'],
     image_url: '/images/colombia-aprende.webp',
+    color: '#fbbf24',
     sort_order: 2,
   },
 ];
