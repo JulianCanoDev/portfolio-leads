@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:16
-    container_name: portfolio-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-portfolio}
@@ -17,8 +16,6 @@ services:
 
   backend:
     build: ./backend
-    image: portfolio-backend
-    container_name: portfolio-backend
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://portfolio:password@postgres:5432/portfolio}
@@ -34,8 +31,6 @@ services:
 
   frontend:
     build: .
-    image: portfolio-frontend
-    container_name: portfolio-frontend
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:8000
@@ -46,10 +41,9 @@ services:
 
   nginx:
     image: nginx:stable-alpine
-    container_name: portfolio-nginx
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${HTTP_PORT:-3000}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:

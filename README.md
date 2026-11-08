@@ -36,6 +36,8 @@ docker compose up -d --build
 
 Shortcuts: `make up` · `make down` · `make logs` · `make reset`
 
+> **Deploying on Dokploy / PaaS?** The stack publishes `${HTTP_PORT:-3000}:80` and defines no fixed container names. Set `HTTP_PORT` to a free port (Dokploy itself usually occupies 3000) in your environment variables, then point the domain to that port — or remove the `ports` block entirely and route your domain straight to the `nginx` service on port 80.
+
 ## Structure
 
 ```
