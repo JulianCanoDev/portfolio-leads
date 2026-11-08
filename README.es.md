@@ -25,7 +25,7 @@ docker compose up -d --build
 - Portfolio: `http://localhost:3000`
 - Dashboard: `http://localhost:3000/dashboard` (login con `ADMIN_USER` / `ADMIN_PASS` del `.env`)
 
-Desde el panel admin, **sin tocar código**: nombre, rol, tagline, colores, skills y redes sociales (**Settings**), proyectos con imágenes, solución y drag & drop (**Proyectos**), redimensionado automático de imágenes 800×500 WebP (**Imágenes**), y los leads del formulario (**Leads**). El portfolio público refleja los cambios al instante.
+Desde el panel admin, **sin tocar código**: nombre, rol, tagline, colores, skills y redes sociales (**Ajustes**), proyectos con imágenes, solución y drag & drop (**Proyectos**), y los leads del formulario (**Leads**). El portfolio público refleja los cambios al instante.
 
 Atajos: `make up` · `make down` · `make logs` · `make reset`
 
@@ -36,7 +36,7 @@ portfolio/
 ├── src/                  # Astro frontend (portfolio + dashboard)
 │   ├── components/       # Hero, Projects, Skills, Contact, Nav, DashboardLayout
 │   ├── layouts/          # Layout.astro
-│   ├── pages/            # index.astro, dashboard/ (login, leads, projects, settings, upload)
+│   ├── pages/            # index.astro, dashboard/ (login, leads, projects, settings)
 │   ├── lib/              # api.ts + cms.ts (SSR → FastAPI, con defaults de fallback)
 │   └── styles/           # colors.css (tokens) + global.css
 ├── backend/              # FastAPI

@@ -44,7 +44,7 @@ portfolio/
 │   ├── components/       # Hero, Projects, Skills, CV, Contact, Nav, DashboardLayout
 │   ├── i18n/             # es.json / en.json dictionaries + helpers
 │   ├── layouts/          # Layout.astro
-│   ├── pages/            # index.astro, dashboard/ (login, leads, projects, settings, upload)
+│   ├── pages/            # index.astro, dashboard/ (login, leads, projects, settings)
 │   ├── lib/              # api.ts + cms.ts (SSR → FastAPI, with inline fallbacks)
 │   ├── middleware.ts     # Locale resolution (cookie → Accept-Language → es)
 │   └── styles/           # colors.css (design tokens) + global.css
