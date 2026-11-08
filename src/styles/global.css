@@ -1457,6 +1457,28 @@ footer {
   transform: none;
 }
 
+/* ---------- Skills chips: 1 col mobile, 2 tablet, 3 desktop ---------- */
+.skills-chips {
+  column-gap: 26px;
+}
+
+.skills-chips .chip {
+  break-inside: avoid;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 769px) {
+  .skills-chips {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1100px) {
+  .skills-chips {
+    column-count: 3;
+  }
+}
+
 /* ---------- Responsive ---------- */
 @media (min-width: 769px) {
   .case-grid {
