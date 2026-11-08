@@ -8,7 +8,7 @@ if (!token) {
   return Astro.redirect('/dashboard/login');
 }
 
-const { t } = useI18n(Astro);
+const { locale, t } = useI18n(Astro);
 
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
 const statusFilter = Astro.url.searchParams.get('status') ?? undefined;
