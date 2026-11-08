@@ -51,6 +51,11 @@ const links = [
           }
         </nav>
         <div class="side-bottom">
+          <div class="lang-toggle side-lang" role="group" aria-label="Language">
+            <button class={`lang-btn${locale === 'es' ? ' active' : ''}`} type="button" data-lang="es" aria-pressed={locale === 'es' ? 'true' : 'false'}>ES</button>
+            <span class="lang-sep">/</span>
+            <button class={`lang-btn${locale === 'en' ? ' active' : ''}`} type="button" data-lang="en" aria-pressed={locale === 'en' ? 'true' : 'false'}>EN</button>
+          </div>
           <a class="side-link" href="/">{t('side.site')}</a>
           <button class="side-link side-logout" id="logoutBtn" type="button">{t('side.logout')}</button>
         </div>
@@ -61,6 +66,18 @@ const links = [
     </div>
 
     <script>
+      import { setLocale, getLocale } from '../i18n/index';
+
+      document.querySelectorAll<HTMLButtonElement>('.lang-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.lang === 'en' ? 'en' : 'es';
+          if (target === getLocale()) return;
+          setLocale(target);
+          document.documentElement.classList.add('lang-switching');
+          setTimeout(() => window.location.reload(), 180);
+        });
+      });
+
       const logoutBtn = document.getElementById('logoutBtn');
       logoutBtn?.addEventListener('click', async () => {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});

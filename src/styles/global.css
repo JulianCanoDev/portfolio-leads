@@ -2049,6 +2049,14 @@ footer {
   gap: 6px;
 }
 
+.side-lang {
+  align-self: flex-start;
+}
+
+.editor-lang {
+  margin-bottom: 18px;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

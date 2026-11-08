@@ -7,7 +7,7 @@ if (!token) {
   return Astro.redirect('/dashboard/login');
 }
 
-const { t } = useI18n(Astro);
+const { locale, t } = useI18n(Astro);
 ---
 
 <DashboardLayout title={t('set.title')} active="settings">
@@ -29,21 +29,33 @@ const { t } = useI18n(Astro);
         <label for="role_title">{t('set.role')}</label>
         <input id="role_title" name="role_title" type="text" maxlength="200" required />
       </div>
-      <div class="field">
-        <label for="tagline_es">{t('set.tagline')} (ES)</label>
-        <textarea id="tagline_es" name="tagline_es" maxlength="1000"></textarea>
+
+      <div class="lang-toggle editor-lang" role="group" aria-label="Language">
+        <button class={`lang-btn${locale === 'es' ? ' active' : ''}`} type="button" data-form-lang="es">ES</button>
+        <span class="lang-sep">/</span>
+        <button class={`lang-btn${locale === 'en' ? ' active' : ''}`} type="button" data-form-lang="en">EN</button>
       </div>
-      <div class="field">
-        <label for="tagline_en">{t('set.tagline')} (EN)</label>
-        <textarea id="tagline_en" name="tagline_en" maxlength="1000"></textarea>
+
+      <div data-lang-pane="es">
+        <div class="field">
+          <label for="tagline_es">{t('set.tagline')} (ES)</label>
+          <textarea id="tagline_es" name="tagline_es" maxlength="1000"></textarea>
+        </div>
+        <div class="field">
+          <label for="description_es">{t('set.description')} (ES)</label>
+          <textarea id="description_es" name="description_es" maxlength="2000"></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label for="description_es">{t('set.description')} (ES)</label>
-        <textarea id="description_es" name="description_es" maxlength="2000"></textarea>
-      </div>
-      <div class="field">
-        <label for="description_en">{t('set.description')} (EN)</label>
-        <textarea id="description_en" name="description_en" maxlength="2000"></textarea>
+
+      <div data-lang-pane="en" hidden={locale !== 'en'}>
+        <div class="field">
+          <label for="tagline_en">{t('set.tagline')} (EN)</label>
+          <textarea id="tagline_en" name="tagline_en" maxlength="1000"></textarea>
+        </div>
+        <div class="field">
+          <label for="description_en">{t('set.description')} (EN)</label>
+          <textarea id="description_en" name="description_en" maxlength="2000"></textarea>
+        </div>
       </div>
 
       <div class="color-row">
@@ -121,6 +133,19 @@ const { t } = useI18n(Astro);
 
 <script>
   import { t } from '../../i18n/index';
+
+  // ES/EN toggle — same mechanism as the project editor panes
+  document.querySelectorAll<HTMLButtonElement>('[data-form-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lang = btn.dataset.formLang === 'en' ? 'en' : 'es';
+      document.querySelectorAll<HTMLButtonElement>('[data-form-lang]').forEach((b) =>
+        b.classList.toggle('active', b === btn),
+      );
+      document.querySelectorAll<HTMLElement>('[data-lang-pane]').forEach((pane) => {
+        pane.hidden = pane.dataset.langPane !== lang;
+      });
+    });
+  });
 
   const form = document.getElementById('settingsForm') as HTMLFormElement;
   const status = document.getElementById('settingsStatus');

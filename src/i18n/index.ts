@@ -11,16 +11,15 @@ export function isLocale(value: string | null | undefined): value is Locale {
   return value === 'es' || value === 'en';
 }
 
-/** Cookie → Accept-Language → 'es' (SSR equivalent of navigator.language detection). */
+/** Cookie → Accept-Language → 'en' (es si el sistema es español, resto → inglés). */
 export function resolveLocale(request: Request): Locale {
   const cookie = request.headers.get('cookie') ?? '';
   const match = cookie.match(/(?:^|;\s*)locale=(es|en)(?:;|$)/);
   if (match) return match[1] as Locale;
 
   const accept = (request.headers.get('accept-language') ?? '').toLowerCase();
-  if (accept.startsWith('es') || accept.includes(',es')) return 'es';
-  if (accept.startsWith('en') || accept.includes(',en')) return 'en';
-  return 'es';
+  if (accept.startsWith('es') || accept.includes(',es') || accept.includes(';es')) return 'es';
+  return 'en';
 }
 
 export function translate(locale: Locale, key: string, vars?: Record<string, string | number>): string {
