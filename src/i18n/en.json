@@ -178,5 +178,8 @@
   "set.cv.error": "Couldn't upload the CV",
   "projects.biology-lab-vr.challenge": "Replace animal dissection in schools with an immersive VR experience. Build realistic hand and tool interactions so students can learn anatomy without harming living beings.",
   "projects.biology-lab-vr.solution": "Full VR experience built in Unity with interactive virtual hands and tools. 3D specimen modeling in Blender, texturing in Photoshop. Realistic anatomical dissection with zero ethical or environmental impact.",
-  "projects.biology-lab-vr.stack": "Unity · Blender · Photoshop · VR"
+  "projects.biology-lab-vr.stack": "Unity · Blender · Photoshop · VR",
+  "projects.synapse-vr.challenge": "Give artificial intelligence to NPCs in VR environments with Unity. Characters needed natural voice conversations, interactive world understanding, dynamic image generation, and multiplayer coordination — all from a unified backend.",
+  "projects.synapse-vr.solution": "Multi-service FastAPI backend with real-time WebSockets: conversational NPCs with TTS voice, AI image generation, interactive world engine with shared variables, and Mirror multiplayer system. Modular Unity SDK with 7 independent packages (Core, Auth, NPC, World, Audio, Image, Mirror).",
+  "projects.synapse-vr.stack": "FastAPI · Unity · WebSocket · Python · TTS · AI Image Gen · Mirror"
 }
