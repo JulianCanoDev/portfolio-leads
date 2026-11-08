@@ -1,50 +1,61 @@
 # JuliXR Portfolio
 
-Portfolio personal + dashboard de leads con FastAPI, Astro y PostgreSQL.
-Hecho para aprender, forkear y personalizar.
+Personal portfolio + leads dashboard with FastAPI, Astro and PostgreSQL.
+Built to learn, fork and customize.
 
-> **El template se clona con el portfolio real de JuliXR como showcase** — nombre, rol, colores, redes y proyectos de ejemplo. Todo se cambia desde `http://localhost:3000/dashboard` sin tocar código.
+**English** · [Español](README.es.md)
+
+> **This template ships with JuliXR's real portfolio as a showcase** — name, role, colors, socials and sample projects. Everything is editable from `http://localhost:3000/dashboard` without touching code.
 >
-> 👉 Versión original en vivo: [portfolio.julixr.com](https://portfolio.julixr.com) — JuliXR Portfolio by Julian Cano, Full Stack & AI Developer.
+> 👉 Live original: [portfolio.julixr.com](https://portfolio.julixr.com) — JuliXR Portfolio by Julian Cano, Full Stack & AI Developer.
+
+## Features
+
+- **CMS dashboard** — identity, role, tagline, accent & secondary colors (with live preview), social links, skills (tag chips) and CV upload (PDF)
+- **Projects CRUD** — create, edit, delete, drag & drop reorder, tag chips and automatic image processing (center-crop 16:10 → 800×500 WebP q85)
+- **Leads dashboard** — contact form submissions with status filters, search, pagination and mark-as-contacted
+- **i18n ES/EN** — browser language detection (SSR, no flash) + ES/EN toggle in the nav
+- **Agent-friendly API** — JWT auth (cookie or Bearer), signed temporary upload URLs for external LLM agents (OpenClaw)
+- **One-command deploy** — `docker compose up -d --build`
 
 ## Stack
 
-- **Frontend:** Astro 7.4 (SSR con `@astrojs/node`)
+- **Frontend:** Astro 7.4 (SSR with `@astrojs/node`)
 - **Backend:** FastAPI + PostgreSQL (SQLAlchemy async)
 - **Infra:** Docker Compose + Nginx
 
 ## Quick start
 
 ```bash
-cp .env.example .env   # Editar con tus datos
+cp .env.example .env   # Edit with your data
 docker compose up -d --build
 ```
 
 - Portfolio: `http://localhost:3000`
-- Dashboard: `http://localhost:3000/dashboard` (login con `ADMIN_USER` / `ADMIN_PASS` del `.env`)
+- Dashboard: `http://localhost:3000/dashboard` (log in with `ADMIN_USER` / `ADMIN_PASS` from `.env`)
 
-Desde el panel admin, **sin tocar código**: nombre, rol, tagline, colores, skills y redes sociales (**Settings**), proyectos con imágenes, solución y drag & drop (**Proyectos**), redimensionado automático de imágenes 800×500 WebP (**Imágenes**), y los leads del formulario (**Leads**). El portfolio público refleja los cambios al instante.
+Shortcuts: `make up` · `make down` · `make logs` · `make reset`
 
-Atajos: `make up` · `make down` · `make logs` · `make reset`
-
-## Estructura
+## Structure
 
 ```
 portfolio/
 ├── src/                  # Astro frontend (portfolio + dashboard)
-│   ├── components/       # Hero, Projects, Skills, Contact, Nav, DashboardLayout
+│   ├── components/       # Hero, Projects, Skills, CV, Contact, Nav, DashboardLayout
+│   ├── i18n/             # es.json / en.json dictionaries + helpers
 │   ├── layouts/          # Layout.astro
 │   ├── pages/            # index.astro, dashboard/ (login, leads, projects, settings, upload)
-│   ├── lib/              # api.ts + cms.ts (SSR → FastAPI, con defaults de fallback)
-│   └── styles/           # colors.css (tokens) + global.css
+│   ├── lib/              # api.ts + cms.ts (SSR → FastAPI, with inline fallbacks)
+│   ├── middleware.ts     # Locale resolution (cookie → Accept-Language → es)
+│   └── styles/           # colors.css (design tokens) + global.css
 ├── backend/              # FastAPI
-│   ├── main.py           # Rutas y auth: leads, settings, projects, upload
-│   ├── config.py         # Settings desde variables de entorno
-│   ├── database.py       # SQLAlchemy async + seed inicial
+│   ├── main.py           # Routes & auth: leads, settings, projects, uploads
+│   ├── config.py         # Settings from environment variables
+│   ├── database.py       # SQLAlchemy async + idempotent migrations + showcase seed
 │   ├── models.py         # Lead, Config, Project
 │   └── image_utils.py    # Crop 16:10 → 800×500 → WebP
-├── uploads/              # Imágenes subidas (volumen compartido con nginx)
-├── nginx.conf            # Reverse proxy: /api/* y /uploads/* → backend, /* → frontend
+├── public/               # Static assets (favicon, covers, default CV)
+├── nginx.conf            # Reverse proxy: /api/* and /uploads/* → backend, /* → frontend
 ├── docker-compose.yml    # postgres + backend + frontend + nginx
 ├── .env.example
 ├── Makefile
@@ -53,39 +64,47 @@ portfolio/
 
 ## API
 
-| Método | Path | Auth | Descripción |
+| Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/contact` | — | Crea un lead `{ name, email, message }` |
+| POST | `/api/contact` | — | Create a lead `{ name, email, message }` |
 | GET | `/api/health` | — | `{ status: "ok", total: N }` |
-| GET | `/api/settings` | — | Configuración del sitio (CMS) |
-| GET | `/api/projects` | — | Proyectos ordenados por `sort_order` |
-| POST | `/api/auth/login` | — | `{ user, pass }` → JWT (cookie httpOnly + token) |
-| POST | `/api/projects` | JWT | Crea proyecto → `{ id, title, image_url, status }` |
-| PATCH | `/api/projects/{id}` | JWT | Actualización parcial (image_url, tags, …) |
+| GET | `/api/settings` | — | Site configuration (CMS) |
+| GET | `/api/projects` | — | Projects ordered by `sort_order` |
+| POST | `/api/auth/login` | — | `{ user, pass }` → JWT (httpOnly cookie + token) |
+| PUT | `/api/settings` | JWT | Update configuration (colors, socials, skills, CV URL…) |
+| POST | `/api/settings/reset-defaults` | JWT | Restore default configuration |
+| POST | `/api/projects` | JWT | Create project → `{ id, title, image_url, status }` |
+| PATCH | `/api/projects/{id}` | JWT | Partial update (image_url, tags, …) |
 | PATCH | `/api/projects/reorder` | JWT | `{ order: [ids] }` — drag & drop |
-| DELETE | `/api/projects/{id}` | JWT | Borra proyecto y su imagen asociada |
-| POST | `/api/projects/generate-upload-url` | JWT | URL firmada (15 min) para subir imágenes sin sesión |
-| POST | `/api/upload` | JWT | Multipart → recorta 16:10 → 800×500 WebP |
-| POST | `/api/upload/{token}` | URL firmada | Subida de imagen para agentes externos |
-| GET | `/api/leads` | JWT | `?page` `?status` `?search` → paginado (20) |
-| GET | `/api/leads/{id}` | JWT | Lead completo |
+| DELETE | `/api/projects/{id}` | JWT | Delete project and its uploaded image |
+| POST | `/api/projects/generate-upload-url` | JWT | Signed URL (15 min) to upload images without a session |
+| POST | `/api/upload` | JWT | Multipart → center-crop 16:10 → 800×500 WebP |
+| POST | `/api/upload/{token}` | Signed URL | Image upload for external agents |
+| POST | `/api/upload/cv` | JWT | Upload PDF → replaces the CV and updates config |
+| GET | `/api/leads` | JWT | `?page` `?status` `?search` → paginated (20) |
+| GET | `/api/leads/{id}` | JWT | Full lead |
 | PATCH | `/api/leads/{id}` | JWT | `{ status: "contacted" }` |
 | GET | `/api/stats` | JWT | `{ total, new, contacted, today }` |
 
-Los endpoints autenticados aceptan la cookie del dashboard o `Authorization: Bearer <token>` — pensados para que un agente externo (OpenClaw/LLM) los consuma. El backend nunca llama APIs de generación de imágenes: el agente genera la imagen con sus propias herramientas y la sube por URL firmada o multipart.
+Authenticated endpoints accept the dashboard cookie or `Authorization: Bearer <token>`, so external agents (OpenClaw or any LLM) can consume them. The backend never calls image-generation APIs: the agent generates images with its own tools and uploads them via the signed URL or multipart.
 
-## Customización rápida
+### Agent flow (example)
 
-1. Editar `src/pages/index.astro` y `src/content/projects/*.md` → tu info y proyectos
-2. Editar `.env` → tus credenciales
-3. Opcional: cambiar colores en `src/styles/colors.css` (`:root { --accent: #6d28d9, ... }`)
+1. `POST /api/projects` with `image_url: null` → project created
+2. Agent generates an 800×500 image with its own tools
+3. `POST /api/projects/generate-upload-url` → signed URL (15 min)
+4. `POST` the image to the signed URL → public URL returned
+5. `PATCH /api/projects/{id}` with `{ "image_url": "..." }` → done
 
-## Variables fácil de editar
+## Customization
 
-- **Astro:** `src/styles/colors.css` → tokens `:root`
-- **Backend:** `backend/config.py` → Settings desde `.env`
-- **Docker:** `docker-compose.yml` → puertos, volúmenes
+1. `/dashboard/settings` — name, role, tagline, colors, socials, skills, CV
+2. `/dashboard/projects` — projects, images, tags and ordering (drag & drop)
+3. Optionally: design tokens in `src/styles/colors.css` (`:root { --accent: #6d28d9, … }`)
+4. Docker: ports and volumes in `docker-compose.yml`
 
-## Licencia
+The public portfolio reflects dashboard changes instantly. Project content can be localized: the three showcase projects carry ES/EN translations in `src/i18n/*.json`, applied while the CMS field still matches the Spanish canonical text — custom edits always win.
 
-MIT — ver [LICENSE](LICENSE).
+## License
+
+MIT — see [LICENSE](LICENSE).
