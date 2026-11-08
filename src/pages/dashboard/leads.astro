@@ -24,11 +24,10 @@ if (!data) {
 const { items, pages, total } = data;
 
 const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleString(localeDate(), { dateStyle: 'medium', timeStyle: 'short' });
-
-function localeDate() {
-  return t('foot.home') === 'Home' ? 'en-US' : 'es-CO';
-}
+  new Date(iso).toLocaleString(locale === 'en' ? 'en-US' : 'es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 
 const preview = (message: string) =>
   message.length > 80 ? `${message.slice(0, 80)}…` : message;
