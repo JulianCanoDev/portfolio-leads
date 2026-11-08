@@ -1,0 +1,160 @@
+---
+import { useI18n } from '../i18n/index';
+import type { SiteSettings } from '../lib/cms';
+
+interface Props {
+  settings: SiteSettings;
+}
+
+const { settings } = Astro.props;
+const { t } = useI18n(Astro);
+
+const waHref = settings.whatsapp_phone
+  ? settings.whatsapp_phone.startsWith('http')
+    ? settings.whatsapp_phone
+    : `https://wa.me/${settings.whatsapp_phone.replace(/\D/g, '')}`
+  : '';
+
+const socials = [
+  settings.linkedin_url && {
+    href: settings.linkedin_url,
+    label: 'LinkedIn',
+    sub: t('contact.social.linkedin'),
+    svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>',
+  },
+  settings.github_url && {
+    href: settings.github_url,
+    label: 'GitHub',
+    sub: t('contact.social.github'),
+    svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.05.78 2.12v3.14c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>',
+  },
+  waHref && {
+    href: waHref,
+    label: 'WhatsApp',
+    sub: t('contact.social.whatsapp'),
+    svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4 7.94 7.94 0 0 0 5.2 15.9L4 20l4.2-1.1a7.9 7.9 0 0 0 3.85 1h.01a7.94 7.94 0 0 0 5.54-13.58Zm-5.55 12.2h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.58 6.58 0 0 1 10.2-8.12 6.55 6.55 0 0 1 1.94 4.67 6.6 6.6 0 0 1-6.54 6.54Zm3.6-4.93c-.2-.1-1.17-.58-1.35-.64-.18-.07-.31-.1-.45.1-.13.2-.51.64-.63.77-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-.99-.59-.53-.99-1.18-1.1-1.38-.12-.2-.01-.31.09-.41.09-.09.2-.23.3-.35.1-.12.13-.2.2-.34.07-.13.03-.25-.02-.35-.05-.1-.45-1.08-.61-1.48-.16-.39-.33-.34-.45-.34l-.38-.02c-.13 0-.35.05-.53.25-.18.2-.7.68-.7 1.66 0 .98.71 1.93.81 2.06.1.13 1.4 2.14 3.4 3 .48.2.85.33 1.14.42.48.15.91.13 1.26.08.38-.06 1.17-.48 1.34-.94.16-.46.16-.85.11-.94-.05-.09-.18-.14-.38-.24Z"/></svg>',
+  },
+].filter(Boolean);
+---
+
+<section id="contacto">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="sec-kicker">{t('contact.kicker')}</p>
+      <h2 class="sec-title">{t('contact.title')}</h2>
+      <p class="sec-sub">{t('contact.sub')}</p>
+    </div>
+
+    <div class="contact-grid">
+      <div class="contact-aside reveal">
+        <h3>{t('contact.aside.title')}</h3>
+        <p>{t('contact.aside.text')}</p>
+        <div class="socials">
+          {
+            socials.map((social) => (
+              <a class="social" href={social!.href} target="_blank" rel="noopener noreferrer">
+                <Fragment set:html={social!.svg} />
+                <span class="s-label">{social!.label}</span>
+                <span class="s-sub">{social!.sub}</span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="form reveal">
+        <form id="contactForm" novalidate>
+          <div class="field">
+            <label for="name">{t('contact.name')}</label>
+            <input id="name" name="name" type="text" placeholder={t('contact.ph.name')} required />
+          </div>
+          <div class="field">
+            <label for="email">{t('contact.email')}</label>
+            <input id="email" name="email" type="email" placeholder={t('contact.ph.email')} required />
+          </div>
+          <div class="field">
+            <label for="message">{t('contact.message')}</label>
+            <textarea id="message" name="message" placeholder={t('contact.ph.message')} required></textarea>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-primary" type="submit">
+              {t('contact.send')}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+            <span class="form-status" id="formStatus"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <p>© {new Date().getFullYear()} {settings.name} — {settings.role_title}</p>
+    <div class="foot-links">
+      <a href="#top">{t('foot.home')}</a>
+      <a href="#proyectos">{t('foot.projects')}</a>
+      <a href="#stack">{t('foot.stack')}</a>
+      <a href="#contacto">{t('foot.contact')}</a>
+    </div>
+  </div>
+  <div class="wrap foot-credit">
+    <p>{t('foot.made', { name: settings.name })}</p>
+  </div>
+</footer>
+
+<script>
+  import { t } from '../i18n/index';
+
+  const form = document.getElementById('contactForm') as HTMLFormElement | null;
+  const status = document.getElementById('formStatus');
+  const submitBtn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const msg = form.message.value.trim();
+
+    if (!name || !email || !msg) {
+      if (status) {
+        status.textContent = t('contact.required');
+        status.style.color = '#fbbf24';
+        status.classList.add('show');
+      }
+      return;
+    }
+
+    if (status) {
+      status.textContent = t('contact.sending');
+      status.style.color = '#9b9bab';
+      status.classList.add('show');
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name, email, message: msg }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      if (status) {
+        status.textContent = t('contact.thanks');
+        status.style.color = 'var(--secondary-soft)';
+      }
+      form.reset();
+    } catch {
+      if (status) {
+        status.textContent = t('contact.error');
+        status.style.color = '#fbbf24';
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import Projects from '../components/Projects.astro';
+import Skills from '../components/Skills.astro';
+import CvSection from '../components/CvSection.astro';
+import Contact from '../components/Contact.astro';
+import { getSettings, getProjects, paletteVars } from '../lib/cms';
+
+const settings = await getSettings();
+const projects = await getProjects();
+
+const paletteStyle = Object.entries(paletteVars(settings.accent_color, settings.secondary_color))
+  .map(([key, value]) => `${key}:${value}`)
+  .join(';');
+---
+
+<Layout
+  title={`${settings.name} — ${settings.role_title}`}
+  description={`${settings.name} — ${settings.role_title}. ${settings.tagline}`}
+  navName={settings.name}
+  navRole={settings.role_title}
+  navCvHref={settings.cv_url || undefined}
+>
+  <main id="top" style={paletteStyle}>
+    <Hero settings={settings} />
+    <Projects projects={projects} />
+    <Skills skills={settings.skills} />
+    <CvSection cvUrl={settings.cv_url} />
+    <Contact settings={settings} />
+  </main>
+</Layout>
+
+<script>
+  // Reveal on scroll (IntersectionObserver fade-in-up with stagger).
+  // Skipped entirely when the user prefers reduced motion.
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add('in');
+            io.unobserve(en.target);
+          }
+        });
+      },
+      { threshold: 0.14, rootMargin: '0px 0px -8% 0px' },
+    );
+    revealEls.forEach((el, idx) => {
+      el.style.transitionDelay = `${(idx % 3) * 70}ms`;
+      io.observe(el);
+    });
+  } else {
+    revealEls.forEach((el) => el.classList.add('in'));
+  }
+</script>

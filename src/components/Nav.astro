@@ -1,0 +1,131 @@
+---
+import { useI18n, setLocale } from '../i18n/index';
+
+interface Props {
+  name?: string;
+  roleTitle?: string;
+  cvHref?: string;
+}
+
+const { name = 'Tu Nombre', roleTitle = 'Full Stack & AI Developer', cvHref } = Astro.props;
+const { locale, t } = useI18n(Astro);
+
+const initials = name
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((word) => word[0]?.toUpperCase() ?? '')
+  .join('');
+
+const links = [
+  { href: '#proyectos', label: t('nav.projects') },
+  { href: '#stack', label: t('nav.stack') },
+  ...(cvHref ? [{ href: cvHref, label: 'CV', external: true }] : []),
+  { href: '#contacto', label: t('nav.contact') },
+];
+---
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a href="#top" class="logo">
+      <span class="mono-mark">{initials || 'JC'}</span>
+      <span class="who"><b>{name}</b><span>{roleTitle}</span></span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label={t('nav.cta')}>
+      {
+        links.map((link) =>
+          'external' in link ? (
+            <a class="nav-link" href={link.href} target="_blank" rel="noopener">
+              {link.label}
+              <svg class="nav-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          ) : (
+            <a class="nav-link" href={link.href}>
+              {link.label}
+            </a>
+          )
+        )
+      }
+    </nav>
+    <div class="nav-actions">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class={`lang-btn${locale === 'es' ? ' active' : ''}`} type="button" data-lang="es" aria-pressed={locale === 'es' ? 'true' : 'false'}>ES</button>
+        <span class="lang-sep">/</span>
+        <button class={`lang-btn${locale === 'en' ? ' active' : ''}`} type="button" data-lang="en" aria-pressed={locale === 'en' ? 'true' : 'false'}>EN</button>
+      </div>
+      <a class="nav-cta" href="#contacto">{t('nav.cta')}</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { setLocale, getLocale } from '../i18n/index';
+
+  // Language toggle: persist cookie + localStorage, fade, reload (SSR re-renders).
+  document.querySelectorAll<HTMLButtonElement>('.lang-btn').forEach((btn) => {
+    if (btn.dataset.lang === getLocale()) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.lang === 'en' ? 'en' : 'es';
+      if (target === getLocale()) return;
+      setLocale(target);
+      document.documentElement.classList.add('lang-switching');
+      setTimeout(() => window.location.reload(), 180);
+    });
+  });
+
+  // Nav scroll state
+  const nav = document.getElementById('nav');
+
+  function onScroll() {
+    if (window.scrollY > 24) nav?.classList.add('scrolled');
+    else nav?.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Mobile menu
+  const menuBtn = document.getElementById('menuBtn');
+  const navLinks = document.getElementById('navLinks');
+
+  function openMenu() {
+    navLinks?.classList.add('open');
+    menuBtn?.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMenu() {
+    navLinks?.classList.remove('open');
+    menuBtn?.setAttribute('aria-expanded', 'false');
+  }
+
+  menuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (navLinks?.classList.contains('open')) closeMenu();
+    else openMenu();
+  });
+
+  navLinks?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a')) closeMenu();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!navLinks?.classList.contains('open')) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('#navLinks') || target.closest('#menuBtn')) return;
+    closeMenu();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navLinks?.classList.contains('open')) closeMenu();
+  });
+</script>

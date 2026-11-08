@@ -1,0 +1,60 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 2126 >>
+stream
+BT
+/F2 26 Tf 1 0 0 1 60 706.0 Tm (Julian Cano) Tj
+/F1 12 Tf 1 0 0 1 60 688.0 Tm (Full Stack & AI Developer | AWS Cloud | AI Automation & Agents) Tj
+/F1 9.5 Tf 1 0 0 1 60 670.5 Tm (linkedin.com/in/juliancanodev/   -   github.com/JulianCanoDev   -   wa.me/573237073472) Tj
+/F2 13 Tf 1 0 0 1 60 637.5 Tm (RESUMEN) Tj
+/F1 10 Tf 1 0 0 1 60 623.5 Tm (Construyo sistemas que integran inteligencia artificial, automatizacion y desarrollo) Tj
+/F1 10 Tf 1 0 0 1 60 611.5 Tm (web - de la idea a produccion.) Tj
+/F2 13 Tf 1 0 0 1 60 580.5 Tm (SKILLS) Tj
+/F1 10 Tf 1 0 0 1 60 566.5 Tm (FastAPI  -  Astro  -  Next.js  -  PostgreSQL  -  Redis  -  Celery  -  Docker  -  n8n  -  AWS) Tj
+/F1 10 Tf 1 0 0 1 60 554.5 Tm (LangChain  -  LangGraph  -  WhatsApp API  -  Evolution API  -  MCP  -  Pterodactyl  -  Uptime Kuma) Tj
+/F2 13 Tf 1 0 0 1 60 523.5 Tm (PROYECTOS) Tj
+/F2 10.5 Tf 1 0 0 1 60 503.0 Tm (Researcher App - Automation) Tj
+/F1 9.5 Tf 1 0 0 1 60 491.5 Tm (Scraping de empleos y remates judiciales, deduplicacion y envio masivo diario por WhatsApp. +87) Tj
+/F1 9.5 Tf 1 0 0 1 60 480.0 Tm (reportes, 3+ digests diarios, automatizacion headless.) Tj
+/F2 10.5 Tf 1 0 0 1 60 459.5 Tm (OpenSEO Toolkit - Web) Tj
+/F1 9.5 Tf 1 0 0 1 60 448.0 Tm (SEO toolkit self-hosted integrado con MCP: health checks automaticos, monitoreo Uptime Kuma,) Tj
+/F1 9.5 Tf 1 0 0 1 60 436.5 Tm (integracion con asistentes AI.) Tj
+/F2 10.5 Tf 1 0 0 1 60 416.0 Tm (Colombia Aprende + AWS - Cloud) Tj
+/F1 9.5 Tf 1 0 0 1 60 404.5 Tm (Formacion oficial en cloud computing \(convenio Alcaldia de Bogota - AWS\), aplicada a) Tj
+/F1 9.5 Tf 1 0 0 1 60 393.0 Tm (infraestructura de proyectos reales.) Tj
+/F2 10.5 Tf 1 0 0 1 60 372.5 Tm (Voty 2.0 - Recruitment Platform) Tj
+/F1 9.5 Tf 1 0 0 1 60 361.0 Tm (Plataforma automatizada de reclutamiento con n8n + PostgreSQL: validacion de identidad, maquina) Tj
+/F1 9.5 Tf 1 0 0 1 60 349.5 Tm (de estados \(Ley 21.719\) y cruce multi-empresa con Buk.) Tj
+/F2 13 Tf 1 0 0 1 60 318.5 Tm (CERTIFICACION) Tj
+/F1 10 Tf 1 0 0 1 60 304.5 Tm (AWS Certified Cloud Practitioner - Programa Colombia Aprende \(Alcaldia de Bogota + AWS\)) Tj
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000348 00000 n 
+0000000450 00000 n 
+trailer << /Size 7 /Root 1 0 R >>
+startxref
+2628
+%%EOF

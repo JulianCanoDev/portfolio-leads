@@ -1,0 +1,29 @@
+/* ============================================
+   Design tokens — cambiá acá para re-theme-ar
+   todo el sitio (portfolio + dashboard)
+   ============================================ */
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #111119;
+  --surface-2: #16161f;
+  --fg: #e5e5e5;
+  --muted: #9b9bab;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --accent: #6d28d9;
+  --accent-glow: #8b5cf6;
+  --accent-soft: #c4b5fd;
+  --secondary: #0d9488;
+  --secondary-soft: #2dd4bf;
+  --cat-bot: #2dd4bf;
+  --cat-web: #7dd3fc;
+  --cat-cloud: #fbbf24;
+  --cat-ai: #a78bfa;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --maxw: 1180px;
+  --radius: 14px;
+  --radius-lg: 20px;
+}

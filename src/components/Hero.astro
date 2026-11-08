@@ -1,0 +1,61 @@
+---
+import { useI18n } from '../i18n/index';
+import type { SiteSettings } from '../lib/cms';
+
+interface Props {
+  settings: SiteSettings;
+}
+
+const { settings } = Astro.props;
+const { t } = useI18n(Astro);
+---
+
+<section class="hero">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-grid"></div>
+    <div class="hero-glow glow-a"></div>
+    <div class="hero-glow glow-b"></div>
+    <div class="particles" id="particles"></div>
+  </div>
+  <div class="wrap hero-inner">
+    <span class="eyebrow"><span class="pulse-dot"></span>{t('hero.eyebrow')}</span>
+    <p class="hero-greeting">{t('hero.greeting')}</p>
+    <h1>{settings.name}</h1>
+    <p class="role">{settings.role_title}</p>
+    <h2>{settings.tagline?.trim() ? settings.tagline : t('hero.tagline')}</h2>
+    <p class="hero-desc">{t('hero.desc')}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#proyectos">
+        {t('hero.cta.projects')}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+      <a class="btn btn-ghost" href="#contacto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16v12H4z"></path>
+          <polyline points="4 7 12 13 20 7"></polyline>
+        </svg>
+        {t('hero.cta.contact')}
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Floating particles (skipped when the user prefers reduced motion)
+  const pc = document.getElementById('particles');
+  if (pc && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.top = `${60 + Math.random() * 40}%`;
+      p.style.animationDuration = `${7 + Math.random() * 9}s`;
+      p.style.animationDelay = `${-Math.random() * 10}s`;
+      if (i % 4 === 0) p.style.background = 'var(--secondary-soft)';
+      pc.appendChild(p);
+    }
+  }
+</script>

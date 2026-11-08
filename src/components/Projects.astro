@@ -1,0 +1,266 @@
+---
+import { translate, useI18n } from '../i18n/index';
+import type { CmsProject } from '../lib/cms';
+
+interface Props {
+  projects: CmsProject[];
+}
+
+const { projects } = Astro.props;
+const { locale, t } = useI18n(Astro);
+
+// Showcase projects carry per-locale translations in the dictionaries.
+// A DB field uses the translation only while it still matches the Spanish
+// canonical text — once the owner edits it in the CMS, the DB value wins.
+const PROJECT_SLUGS: { token: string; slug: string }[] = [
+  { token: 'researcher', slug: 'researcher' },
+  { token: 'openseo', slug: 'openseo' },
+  { token: 'colombia', slug: 'colombia' },
+];
+
+function projectSlug(title: string): string | null {
+  const s = title.toLowerCase();
+  const match = PROJECT_SLUGS.find((p) => s.includes(p.token));
+  return match?.slug ?? null;
+}
+
+function localizedField(slug: string | null, field: string, value: string | null): string | null {
+  if (!value || !slug) return value;
+  const esCanonical = translate('es', `projects.${slug}.${field}`);
+  if (value !== esCanonical) return value;
+  return t(`projects.${slug}.${field}`);
+}
+
+function localizedProject(project: CmsProject) {
+  const slug = projectSlug(project.title);
+  return {
+    ...project,
+    challenge: localizedField(slug, 'challenge', project.challenge),
+    solution: localizedField(slug, 'solution', project.solution),
+    stack: localizedField(slug, 'stack', project.stack),
+  };
+}
+
+const localized = projects.map(localizedProject);
+
+const FALLBACK_COVER = `<svg viewBox="0 0 480 270" aria-hidden="true">
+  <rect width="480" height="270" fill="#0d0d16"/>
+  <circle cx="240" cy="135" r="118" fill="#6d28d9" opacity=".1"/>
+  <rect x="150" y="80" width="180" height="14" rx="7" fill="#8b5cf6" opacity=".55"/>
+  <rect x="150" y="106" width="130" height="14" rx="7" fill="#9b9bab" opacity=".35"/>
+  <rect x="150" y="132" width="160" height="14" rx="7" fill="#9b9bab" opacity=".35"/>
+  <rect x="150" y="168" width="70" height="22" rx="11" fill="#0d9488" opacity=".8"/>
+</svg>`;
+
+const catClass = (category: string) => {
+  const c = category.toLowerCase();
+  if (c.includes('bot')) return 'bot';
+  if (c.includes('cloud')) return 'cloud';
+  if (c.includes('ai') || c.includes('ia')) return 'ai';
+  if (c.includes('web') || c.includes('app')) return 'web';
+  if (c.includes('automat') || c.includes('auto')) return 'bot';
+  return 'ai';
+};
+
+const splitStack = (stack: string | null) =>
+  (stack ?? '')
+    .split(/[,;·]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+const payload = Object.fromEntries(
+  localized.map((project) => [
+    project.id,
+    {
+      catLabel: project.category,
+      title: project.title,
+      challenge: project.challenge ?? '',
+      solution: project.solution ?? '',
+      stack: splitStack(project.stack),
+      tags: project.tags ?? [],
+    },
+  ]),
+);
+---
+
+<section id="proyectos">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="sec-kicker">{t('proj.kicker')}</p>
+      <h2 class="sec-title">{t('proj.title')}</h2>
+      <p class="sec-sub">{t('proj.sub')}</p>
+    </div>
+
+    {
+      localized.length === 0 ? (
+        <div class="empty reveal">
+          <span class="plus">+</span>
+          <p class="empty-title">{t('proj.empty.title')}</p>
+          <p class="empty-sub">{t('proj.empty.sub')}</p>
+          <a class="btn btn-ghost empty-cta" href="/dashboard/projects">{t('proj.empty.cta')} →</a>
+        </div>
+      ) : (
+        <div class="case-grid">
+          {localized.map((project) => (
+            <article class="case reveal" data-project={project.id} tabindex="0" role="button" aria-haspopup="dialog">
+              <div class="case-cover">
+                {project.image_url ? (
+                  <img src={project.image_url} alt={project.title} loading="lazy" />
+                ) : (
+                  <Fragment set:html={FALLBACK_COVER} />
+                )}
+              </div>
+              <div class="case-body">
+                <div class="case-top">
+                  <span class={`cat ${catClass(project.category)}`}>{project.category}</span>
+                </div>
+                <h3>{project.title}</h3>
+                {project.challenge && (
+                  <div class="csec">
+                    <p class="clabel">🔥 {t('proj.challenge')}</p>
+                    <p class="ctext preview">{project.challenge}</p>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+
+          <article class="case placeholder">
+            <div class="case-body">
+              <div class="case-top">
+                <span class="cat dashed">{t('ph.badge')}</span>
+              </div>
+              <h3>{t('ph.title')}</h3>
+              <div class="csec">
+                <p class="clabel">🔥 {t('proj.challenge')}</p>
+                <p class="ctext">{t('ph.challenge')}</p>
+              </div>
+              <div class="csec">
+                <p class="clabel">✅ {t('proj.solution')}</p>
+                <p class="ctext">{t('ph.solution')}</p>
+              </div>
+              <div class="csec">
+                <p class="clabel">🛠 {t('proj.stack')}</p>
+                <p class="ctext">{t('ph.stack')}</p>
+              </div>
+              <a class="btn btn-primary talk-btn" href="#contacto">{t('ph.talk')}</a>
+            </div>
+          </article>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<!-- Case-study data consumed by the modal -->
+<script type="application/json" id="projects-data" is:inline set:html={JSON.stringify(payload)} />
+
+<!-- ================= MODAL ================= -->
+<div class="modal" id="project-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label={t('proj.close')}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-cover" id="modalCover"></div>
+    <div class="modal-body">
+      <div class="case-top"><span class="cat" id="modalCat"></span></div>
+      <h3 id="modalTitle"></h3>
+      <div class="cs-block"><p class="cs-label">🔥 {t('proj.challenge')}</p><p id="modalChallenge"></p></div>
+      <div class="cs-block"><p class="cs-label">✅ {t('proj.solution')}</p><p id="modalSolution"></p></div>
+      <div class="cs-block"><p class="cs-label">🛠 {t('proj.stack')}</p><div class="mstack" id="modalStack"></div></div>
+      <div class="cs-block"><p class="cs-label">🏷 {t('proj.tags')}</p><div class="mstack" id="modalTags"></div></div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" href="#contacto">
+          {t('proj.talk')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+        <button class="btn btn-ghost" data-close>{t('proj.close')}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('project-modal')!;
+  const closeBtn = modal.querySelector<HTMLButtonElement>('.modal-close')!;
+  const mCover = document.getElementById('modalCover')!;
+  const mCat = document.getElementById('modalCat')!;
+  const mTitle = document.getElementById('modalTitle')!;
+  const mChallenge = document.getElementById('modalChallenge')!;
+  const mSolution = document.getElementById('modalSolution')!;
+  const mStack = document.getElementById('modalStack')!;
+  const mTags = document.getElementById('modalTags')!;
+
+  const dataEl = document.getElementById('projects-data');
+  const PROJECTS: Record<
+    string,
+    { catLabel: string; title: string; challenge: string; solution: string; stack: string[]; tags: string[] }
+  > = dataEl ? JSON.parse(dataEl.textContent ?? '{}') : {};
+
+  let lastFocus: HTMLElement | null = null;
+
+  function fillChips(container: HTMLElement, values: string[]) {
+    container.innerHTML = '';
+    for (const value of values) {
+      const chip = document.createElement('span');
+      chip.className = 'mtag';
+      chip.textContent = value;
+      container.appendChild(chip);
+    }
+  }
+
+  function openModal(key: string, card: Element) {
+    const p = PROJECTS[key];
+    if (!p) return;
+    const cover = card.querySelector('.case-cover');
+    mCover.innerHTML = cover ? cover.innerHTML : '';
+    mCat.className = 'cat ai';
+    mCat.textContent = p.catLabel;
+    mTitle.textContent = p.title;
+    mChallenge.textContent = p.challenge;
+    mSolution.textContent = p.solution;
+    fillChips(mStack, p.stack);
+    fillChips(mTags, p.tags);
+    lastFocus = document.activeElement as HTMLElement | null;
+    modal.classList.add('open');
+    document.body.classList.add('no-scroll');
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+    lastFocus?.focus();
+  }
+
+  closeBtn.addEventListener('click', closeModal);
+
+  document.querySelectorAll<HTMLElement>('.case[data-project]').forEach((card) => {
+    card.addEventListener('click', () => openModal(card.dataset.project!, card));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openModal(card.dataset.project!, card);
+      }
+    });
+  });
+
+  modal.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-close]')) {
+      closeModal();
+      return;
+    }
+    if (e.target === modal || (e.target as HTMLElement).classList.contains('modal-backdrop')) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+</script>

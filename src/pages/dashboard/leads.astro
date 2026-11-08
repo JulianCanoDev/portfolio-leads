@@ -1,0 +1,183 @@
+---
+import DashboardLayout from '../../components/DashboardLayout.astro';
+import { useI18n } from '../../i18n/index';
+import { API_COOKIE, fetchLeads, fetchStats } from '../../lib/api';
+
+const token = Astro.cookies.get(API_COOKIE)?.value;
+if (!token) {
+  return Astro.redirect('/dashboard/login');
+}
+
+const { t } = useI18n(Astro);
+
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
+const statusFilter = Astro.url.searchParams.get('status') ?? undefined;
+const search = Astro.url.searchParams.get('q') ?? undefined;
+
+const [data, stats] = await Promise.all([
+  fetchLeads(token, page, statusFilter, search),
+  fetchStats(token),
+]);
+if (!data) {
+  return Astro.redirect('/dashboard/login');
+}
+const { items, pages, total } = data;
+
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleString(localeDate(), { dateStyle: 'medium', timeStyle: 'short' });
+
+function localeDate() {
+  return t('foot.home') === 'Home' ? 'en-US' : 'es-CO';
+}
+
+const preview = (message: string) =>
+  message.length > 80 ? `${message.slice(0, 80)}…` : message;
+
+const buildHref = (overrides: Record<string, string | undefined>) => {
+  const params = new URLSearchParams();
+  const merged = {
+    status: statusFilter,
+    q: search,
+    page: String(page),
+    ...overrides,
+  };
+  if (merged.status) params.set('status', merged.status);
+  if (merged.q) params.set('q', merged.q);
+  if (merged.page && merged.page !== '1') params.set('page', merged.page);
+  const qs = params.toString();
+  return qs ? `/dashboard/leads?${qs}` : '/dashboard/leads';
+};
+
+const filters = [
+  { label: t('leads.filter.all'), href: buildHref({ status: undefined, page: '1' }), active: !statusFilter },
+  { label: t('leads.filter.new'), href: buildHref({ status: 'new', page: '1' }), active: statusFilter === 'new' },
+  { label: t('leads.filter.contacted'), href: buildHref({ status: 'contacted', page: '1' }), active: statusFilter === 'contacted' },
+];
+
+const statChips = [
+  { label: t('leads.stat.total'), value: stats?.total ?? total, cls: '' },
+  { label: t('leads.stat.new'), value: stats?.new ?? 0, cls: 'teal' },
+  { label: t('leads.stat.contacted'), value: stats?.contacted ?? 0, cls: 'green' },
+  { label: t('leads.stat.today'), value: stats?.today ?? 0, cls: 'purple' },
+];
+---
+
+<DashboardLayout title={t('leads.title')} active="leads">
+  <div class="dash-head">
+    <div>
+      <p class="sec-kicker">{t('leads.kicker')}</p>
+      <h1 class="dash-title">{t('leads.title')}</h1>
+      <p class="dash-sub">{t('leads.sub', { total })}</p>
+    </div>
+    <div class="dash-tools">
+      <div class="filters">
+        {filters.map((f) => (
+          <a class={`filter-chip${f.active ? ' active' : ''}`} href={f.href}>{f.label}</a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-chips">
+    {statChips.map((chip) => (
+      <div class={`stat-chip ${chip.cls}`}>
+        <span class="stat-n">{chip.value}</span>
+        <span class="stat-l">{chip.label}</span>
+      </div>
+    ))}
+  </div>
+
+  <form class="search-bar" method="get" action="/dashboard/leads">
+    {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
+    <input
+      class="search-input"
+      type="search"
+      name="q"
+      placeholder={t('leads.search.ph')}
+      value={search ?? ''}
+      aria-label={t('leads.search.btn')}
+    />
+    <button class="tool-btn" type="submit">{t('leads.search.btn')}</button>
+  </form>
+
+  {
+    items.length === 0 ? (
+      <div class="empty">
+        <span class="plus">+</span>
+        <p class="empty-title">{t('leads.empty.title')}</p>
+        <p class="empty-sub">{t('leads.empty.sub')}</p>
+      </div>
+    ) : (
+      <div class="leads-card">
+        <div class="table-scroll">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>{t('leads.col.name')}</th>
+                <th>{t('leads.col.email')}</th>
+                <th>{t('leads.col.message')}</th>
+                <th>{t('leads.col.date')}</th>
+                <th>{t('leads.col.status')}</th>
+                <th>{t('leads.col.action')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((lead) => (
+                <tr>
+                  <td class="lead-name">{lead.name}</td>
+                  <td class="lead-email">{lead.email}</td>
+                  <td class="lead-msg" title={lead.message}>{preview(lead.message)}</td>
+                  <td class="lead-date">{fmtDate(lead.created_at)}</td>
+                  <td>
+                    <span class={`badge ${lead.status === 'contacted' ? 'contacted' : 'new'}`}>
+                      {lead.status === 'contacted' ? t('leads.status.contacted') : t('leads.status.new')}
+                    </span>
+                  </td>
+                  <td class="action-cell">
+                    <button class="mark-btn" type="button" data-mark={lead.id} data-next={lead.status === 'contacted' ? 'new' : 'contacted'}>
+                      {lead.status === 'contacted' ? t('leads.unmark') : t('leads.mark')}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    pages > 1 && (
+      <nav class="pager" aria-label={t('leads.page', { page, pages })}>
+        {page > 1 ? <a class="page-btn" href={buildHref({ page: String(page - 1) })}>{t('leads.prev')}</a> : null}
+        <span class="page-info">{t('leads.page', { page, pages })}</span>
+        {page < pages ? <a class="page-btn" href={buildHref({ page: String(page + 1) })}>{t('leads.next')}</a> : null}
+      </nav>
+    )
+  }
+</DashboardLayout>
+
+<script>
+  import { t } from '../../i18n/index';
+
+  document.querySelectorAll<HTMLButtonElement>('[data-mark]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.mark;
+      const next = btn.dataset.next;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/leads/${id}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ status: next }),
+        });
+        if (res.ok) window.location.reload();
+        else btn.disabled = false;
+      } catch {
+        btn.disabled = false;
+      }
+    });
+  });
+</script>

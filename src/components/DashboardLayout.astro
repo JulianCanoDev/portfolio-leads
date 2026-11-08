@@ -1,0 +1,71 @@
+---
+import { useI18n } from '../i18n/index';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  active?: 'leads' | 'projects' | 'settings' | 'upload';
+}
+
+const { title = 'Dashboard', active = 'leads' } = Astro.props;
+const { locale, t } = useI18n(Astro);
+
+const links = [
+  { id: 'leads', href: '/dashboard/leads', label: t('side.leads') },
+  { id: 'projects', href: '/dashboard/projects', label: t('side.projects') },
+  { id: 'settings', href: '/dashboard/settings', label: t('side.settings') },
+  { id: 'upload', href: '/dashboard/upload', label: t('side.images') },
+];
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — {t('side.dashboard')}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="dash">
+      <aside class="sidebar">
+        <a href="/dashboard/leads" class="logo">
+          <span class="mono-mark">JC</span>
+          <span class="who"><b>{t('side.dashboard')}</b><span>Dashboard</span></span>
+        </a>
+        <nav class="side-nav" aria-label={t('side.dashboard')}>
+          {
+            links.map((link) => (
+              <a class={`side-link${active === link.id ? ' active' : ''}`} href={link.href} aria-current={active === link.id ? 'page' : undefined}>
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+        <div class="side-bottom">
+          <a class="side-link" href="/">{t('side.site')}</a>
+          <button class="side-link side-logout" id="logoutBtn" type="button">{t('side.logout')}</button>
+        </div>
+      </aside>
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+
+    <script>
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn?.addEventListener('click', async () => {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+        window.location.href = '/dashboard/login';
+      });
+    </script>
+  </body>
+</html>

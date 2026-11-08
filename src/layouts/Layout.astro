@@ -1,0 +1,47 @@
+---
+import Nav from '../components/Nav.astro';
+import { useI18n } from '../i18n/index';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  showNav?: boolean;
+  navName?: string;
+  navRole?: string;
+  navCvHref?: string;
+}
+
+const {
+  title = 'Portfolio — Full Stack & AI Developer',
+  description = 'Portfolio personal con dashboard de leads. Hecho con Astro, FastAPI y PostgreSQL.',
+  showNav = true,
+  navName,
+  navRole,
+  navCvHref,
+} = Astro.props;
+const { locale } = useI18n(Astro);
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    {showNav && <Nav name={navName} roleTitle={navRole} cvHref={navCvHref} />}
+    <slot />
+  </body>
+</html>

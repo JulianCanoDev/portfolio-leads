@@ -1,0 +1,41 @@
+---
+import { useI18n } from '../i18n/index';
+
+interface Props {
+  skills: string[];
+}
+
+const { skills = [] } = Astro.props;
+const { t } = useI18n(Astro);
+---
+
+<section id="stack">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="sec-kicker">{t('skills.kicker')}</p>
+      <h2 class="sec-title">{t('skills.title')}</h2>
+      <p class="sec-sub">{t('skills.sub')}</p>
+    </div>
+
+    {
+      skills.length === 0 ? (
+        <div class="empty reveal">
+          <span class="plus">+</span>
+          <p class="empty-title">{t('skills.empty.title')}</p>
+          <p class="empty-sub">{t('skills.empty.sub')}</p>
+          <a class="btn btn-ghost empty-cta" href="/dashboard/settings">{t('skills.empty.cta')} →</a>
+        </div>
+      ) : (
+        <div class="stack-groups">
+          <div class="sgroup reveal">
+            <div class="chips">
+              {skills.map((skill) => (
+                <span class="chip">{skill}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</section>

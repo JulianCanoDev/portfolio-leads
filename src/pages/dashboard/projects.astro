@@ -1,0 +1,339 @@
+---
+import DashboardLayout from '../../components/DashboardLayout.astro';
+import { useI18n } from '../../i18n/index';
+
+const token = Astro.cookies.get('julixr_token')?.value;
+if (!token) {
+  return Astro.redirect('/dashboard/login');
+}
+
+const { t } = useI18n(Astro);
+---
+
+<DashboardLayout title={t('padmin.title')} active="projects">
+  <div class="dash-head">
+    <div>
+      <p class="sec-kicker">{t('set.kicker')}</p>
+      <h1 class="dash-title">{t('padmin.title')}</h1>
+      <p class="dash-sub">{t('padmin.sub')}</p>
+    </div>
+    <div class="dash-tools">
+      <button class="tool-btn" type="button" id="newBtn">{t('padmin.new')}</button>
+    </div>
+  </div>
+
+  <div class="proj-list" id="projList">
+    <p class="proj-loading">{t('padmin.loading')}</p>
+  </div>
+
+  <section class="proj-editor" id="editor" hidden>
+    <h2 class="editor-title" id="editorTitle">{t('padmin.editor.new')}</h2>
+    <form class="form" id="projForm">
+      <div class="field">
+        <label for="p_title">{t('padmin.f.title')}</label>
+        <input id="p_title" type="text" maxlength="200" required />
+      </div>
+      <div class="field">
+        <label for="p_category">{t('padmin.f.category')}</label>
+        <input id="p_category" type="text" maxlength="100" placeholder={t('padmin.f.category.ph')} />
+      </div>
+      <div class="field">
+        <label for="p_challenge">{t('padmin.f.challenge')}</label>
+        <textarea id="p_challenge" maxlength="5000"></textarea>
+      </div>
+      <div class="field">
+        <label for="p_solution">{t('padmin.f.solution')}</label>
+        <textarea id="p_solution" maxlength="5000"></textarea>
+      </div>
+      <div class="field">
+        <label for="p_stack">{t('padmin.f.stack')}</label>
+        <input id="p_stack" type="text" maxlength="2000" placeholder={t('padmin.f.stack.ph')} />
+      </div>
+      <div class="field">
+        <label for="p_tag_input">{t('padmin.f.tags')}</label>
+        <div class="chip-input" id="chipBox">
+          <span class="chips" id="tagChips"></span>
+          <input id="p_tag_input" type="text" placeholder={t('padmin.f.tags.ph')} />
+        </div>
+      </div>
+      <div class="field">
+        <label for="p_image">{t('padmin.f.image')}</label>
+        <div class="img-pick">
+          <img id="p_image_preview" alt="" hidden />
+          <input id="p_image" type="file" accept="image/*" />
+        </div>
+      </div>
+      <div class="form-foot">
+        <button class="btn btn-primary" type="submit" id="saveProjBtn">{t('padmin.save')}</button>
+        <button class="tool-btn" type="button" id="cancelBtn">{t('padmin.cancel')}</button>
+        <span class="form-status" id="projStatus"></span>
+      </div>
+    </form>
+  </section>
+</DashboardLayout>
+
+<script>
+  import { t } from '../../i18n/index';
+
+  interface Project {
+    id: number;
+    title: string;
+    category: string;
+    challenge: string | null;
+    solution: string | null;
+    stack: string | null;
+    tags: string[];
+    image_url: string | null;
+  }
+
+  const list = document.getElementById('projList')!;
+  const editor = document.getElementById('editor') as HTMLElement;
+  const editorTitle = document.getElementById('editorTitle')!;
+  const form = document.getElementById('projForm') as HTMLFormElement;
+  const status = document.getElementById('projStatus');
+  const saveBtn = document.getElementById('saveProjBtn') as HTMLButtonElement;
+
+  const f = {
+    title: document.getElementById('p_title') as HTMLInputElement,
+    category: document.getElementById('p_category') as HTMLInputElement,
+    challenge: document.getElementById('p_challenge') as HTMLTextAreaElement,
+    solution: document.getElementById('p_solution') as HTMLTextAreaElement,
+    stack: document.getElementById('p_stack') as HTMLInputElement,
+    image: document.getElementById('p_image') as HTMLInputElement,
+    tagInput: document.getElementById('p_tag_input') as HTMLInputElement,
+  };
+  const chipsBox = document.getElementById('tagChips')!;
+  const preview = document.getElementById('p_image_preview') as HTMLImageElement;
+
+  let projects: Project[] = [];
+  let editingId: number | null = null;
+  let tags: string[] = [];
+  let pendingFile: File | null = null;
+  let keepImageUrl: string | null = null;
+
+  function showStatus(text: string, color: string) {
+    if (status) {
+      status.textContent = text;
+      status.style.color = color;
+      status.classList.add('show');
+    }
+  }
+
+  function renderChips() {
+    chipsBox.innerHTML = '';
+    tags.forEach((tag, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip removable';
+      chip.textContent = tag;
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '×';
+      x.addEventListener('click', () => {
+        tags.splice(i, 1);
+        renderChips();
+      });
+      chip.appendChild(x);
+      chipsBox.appendChild(chip);
+    });
+  }
+
+  function addTag(raw: string) {
+    const tag = raw.trim().replace(/,+$/, '');
+    if (tag && !tags.includes(tag) && tags.length < 20) {
+      tags.push(tag);
+      renderChips();
+    }
+  }
+
+  f.tagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(f.tagInput.value);
+      f.tagInput.value = '';
+    }
+  });
+  f.tagInput.addEventListener('blur', () => {
+    if (f.tagInput.value) {
+      addTag(f.tagInput.value);
+      f.tagInput.value = '';
+    }
+  });
+
+  f.image.addEventListener('change', () => {
+    pendingFile = f.image.files?.[0] ?? null;
+    if (pendingFile) {
+      preview.src = URL.createObjectURL(pendingFile);
+      preview.hidden = false;
+    }
+  });
+
+  function openEditor(project: Project | null) {
+    editingId = project?.id ?? null;
+    editorTitle.textContent = project ? t('padmin.editor.edit', { title: project.title }) : t('padmin.editor.new');
+    f.title.value = project?.title ?? '';
+    f.category.value = project?.category ?? 'Web';
+    f.challenge.value = project?.challenge ?? '';
+    f.solution.value = project?.solution ?? '';
+    f.stack.value = project?.stack ?? '';
+    tags = project ? [...project.tags] : [];
+    renderChips();
+    pendingFile = null;
+    f.image.value = '';
+    keepImageUrl = project?.image_url ?? null;
+    preview.src = keepImageUrl ?? '';
+    preview.hidden = !keepImageUrl;
+    showStatus('', '');
+    editor.hidden = false;
+    editor.scrollIntoView({ behavior: 'smooth' });
+    f.title.focus();
+  }
+
+  document.getElementById('newBtn')?.addEventListener('click', () => openEditor(null));
+  document.getElementById('cancelBtn')?.addEventListener('click', () => {
+    editor.hidden = true;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!f.title.value.trim()) return;
+    saveBtn.disabled = true;
+    showStatus(t('padmin.saving'), '#9b9bab');
+
+    let image_url = keepImageUrl;
+    try {
+      if (pendingFile) {
+        const fd = new FormData();
+        fd.append('file', pendingFile);
+        const up = await fetch('/api/upload', { method: 'POST', credentials: 'same-origin', body: fd });
+        if (!up.ok) throw new Error('upload');
+        image_url = ((await up.json()) as { url: string }).url;
+      }
+
+      const body = {
+        title: f.title.value.trim(),
+        category: f.category.value.trim() || 'Web',
+        challenge: f.challenge.value.trim() || null,
+        solution: f.solution.value.trim() || null,
+        stack: f.stack.value.trim() || null,
+        tags,
+        image_url,
+      };
+      const res = await fetch(editingId ? `/api/projects/${editingId}` : '/api/projects', {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+
+      editor.hidden = true;
+      await load();
+    } catch {
+      showStatus(t('padmin.error'), '#fbbf24');
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  async function load() {
+    const res = await fetch('/api/projects', { credentials: 'same-origin' });
+    projects = (await res.json()) as Project[];
+    render();
+  }
+
+  function render() {
+    list.innerHTML = '';
+    if (projects.length === 0) {
+      list.innerHTML = `<p class="proj-loading">${t('padmin.empty')}</p>`;
+      return;
+    }
+    projects.forEach((project) => {
+      const row = document.createElement('article');
+      row.className = 'proj-row';
+      row.draggable = true;
+      row.dataset.id = project.id;
+
+      const handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.title = 'Arrastrá para reordenar';
+      handle.textContent = '⠿';
+
+      const thumb = document.createElement('div');
+      thumb.className = 'proj-thumb';
+      if (project.image_url) {
+        const img = document.createElement('img');
+        img.src = project.image_url;
+        img.alt = project.title;
+        thumb.appendChild(img);
+      }
+
+      const info = document.createElement('div');
+      info.className = 'proj-info';
+      const title = document.createElement('h3');
+      title.textContent = project.title;
+      const cat = document.createElement('span');
+      cat.className = 'cat ai';
+      cat.textContent = project.category;
+      info.append(title, cat);
+
+      const actions = document.createElement('div');
+      actions.className = 'proj-actions';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'mark-btn';
+      editBtn.textContent = t('padmin.edit');
+      editBtn.addEventListener('click', () => openEditor(project));
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.textContent = '×';
+      delBtn.title = t('padmin.delete');
+      delBtn.addEventListener('click', async () => {
+        if (!window.confirm(t('padmin.confirm.delete', { title: project.title }))) return;
+        delBtn.disabled = true;
+        const res = await fetch(`/api/projects/${project.id}`, { method: 'DELETE', credentials: 'same-origin' });
+        if (res.ok) await load();
+        else delBtn.disabled = false;
+      });
+      actions.append(editBtn, delBtn);
+
+      row.append(handle, thumb, info, actions);
+      list.appendChild(row);
+    });
+  }
+
+  // Drag & drop reorder
+  let dragId: number | null = null;
+  list.addEventListener('dragstart', (e) => {
+    const row = (e.target as HTMLElement).closest('.proj-row');
+    if (!row) return;
+    dragId = Number(row.dataset.id);
+    row.classList.add('dragging');
+  });
+  list.addEventListener('dragend', (e) => {
+    const row = (e.target as HTMLElement).closest('.proj-row');
+    row?.classList.remove('dragging');
+    dragId = null;
+  });
+  list.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const row = (e.target as HTMLElement).closest('.proj-row');
+    const dragging = list.querySelector('.dragging');
+    if (!row || !dragging || row === dragging) return;
+    const rect = row.getBoundingClientRect();
+    const after = e.clientY > rect.top + rect.height / 2;
+    list.insertBefore(dragging, after ? row.nextSibling : row);
+  });
+  list.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const order = Array.from(list.querySelectorAll('.proj-row')).map((row) => Number((row as HTMLElement).dataset.id));
+    if (order.length < 2) return;
+    await fetch('/api/projects/reorder', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ order }),
+    });
+    await load();
+  });
+
+  await load();
+</script>

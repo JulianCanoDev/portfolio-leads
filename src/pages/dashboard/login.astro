@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { useI18n } from '../../i18n/index';
+
+const { t } = useI18n(Astro);
+---
+
+<Layout title={`${t('side.dashboard')} — Julian Cano`} showNav={false}>
+  <div class="login-wrap">
+    <form class="form login-card" id="loginForm" novalidate>
+      <div class="login-brand">
+        <span class="mono-mark">JC</span>
+        <span class="who"><b>Julian Cano</b><span>{t('login.brand')}</span></span>
+      </div>
+      <h1 class="login-title">{t('login.title')}</h1>
+      <div class="field">
+        <label for="user">{t('login.user')}</label>
+        <input id="user" name="user" type="text" placeholder="admin" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">{t('login.pass')}</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <div class="form-foot">
+        <button class="btn btn-primary" type="submit" id="loginBtn">
+          {t('login.submit')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+        </button>
+        <span class="form-status" id="loginStatus"></span>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  import { t } from '../../i18n/index';
+
+  const form = document.getElementById('loginForm') as HTMLFormElement | null;
+  const userInput = document.getElementById('user') as HTMLInputElement | null;
+  const passInput = document.getElementById('password') as HTMLInputElement | null;
+  const status = document.getElementById('loginStatus');
+  const btn = document.getElementById('loginBtn') as HTMLButtonElement | null;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = userInput?.value.trim() ?? '';
+    const password = passInput?.value ?? '';
+    if (!user || !password) {
+      if (status) {
+        status.textContent = t('login.required');
+        status.style.color = '#fbbf24';
+        status.classList.add('show');
+      }
+      return;
+    }
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ user, pass: password }),
+      });
+      if (res.ok) {
+        window.location.href = '/dashboard/leads';
+        return;
+      }
+      if (status) {
+        status.textContent = t('login.wrong');
+        status.style.color = '#fbbf24';
+        status.classList.add('show');
+      }
+    } catch {
+      if (status) {
+        status.textContent = t('login.error');
+        status.style.color = '#fbbf24';
+        status.classList.add('show');
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+</script>
