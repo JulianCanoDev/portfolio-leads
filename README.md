@@ -31,12 +31,12 @@ cp .env.example .env   # Edit with your data
 docker compose up -d --build
 ```
 
-- Portfolio: `http://localhost:3000`
+- Portfolio: `http://localhost:3080` (override with `HTTP_PORT`)
 - Dashboard: `http://localhost:3000/dashboard` (log in with `ADMIN_USER` / `ADMIN_PASS` from `.env`)
 
 Shortcuts: `make up` · `make down` · `make logs` · `make reset`
 
-> **Deploying on Dokploy / PaaS?** The stack publishes `${HTTP_PORT:-3000}:80` and defines no fixed container names. Set `HTTP_PORT` to a free port (Dokploy itself usually occupies 3000) in your environment variables, then point the domain to that port — or remove the `ports` block entirely and route your domain straight to the `nginx` service on port 80.
+> **Deploying on Dokploy / PaaS?** The stack publishes `${HTTP_PORT:-3080}:80` (3000 is usually taken by Dokploy/Traefik) and defines no fixed container names. Set `HTTP_PORT` to a free port (Dokploy itself usually occupies 3000) in your environment variables, then point the domain to that port — or remove the `ports` block entirely and route your domain straight to the `nginx` service on port 80.
 
 ## Structure
 
