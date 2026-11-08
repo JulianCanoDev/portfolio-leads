@@ -25,7 +25,12 @@ MIGRATIONS = (
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}'",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS cv_url VARCHAR(500) DEFAULT '/CV_Julian_Cano.pdf'",
     "UPDATE config SET cv_url = '/CV_Julian_Cano.pdf' WHERE cv_url IS NULL",
-    "UPDATE projects SET solution = result WHERE solution IS NULL AND result IS NOT NULL",
+)
+
+# Backfill only on databases created before the solution refactor (they still
+# carry the legacy `result` column; fresh ones never had it).
+RESULT_BACKFILL = (
+    "UPDATE projects SET solution = result WHERE solution IS NULL AND result IS NOT NULL"
 )
 
 
@@ -70,6 +75,14 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
         for statement in MIGRATIONS:
             await conn.execute(text(statement))
+        has_result_column = await conn.execute(
+            text(
+                "SELECT 1 FROM information_schema.columns "
+                "WHERE table_name = 'projects' AND column_name = 'result'"
+            )
+        ).scalar()
+        if has_result_column:
+            await conn.execute(text(RESULT_BACKFILL))
 
     # Singleton de configuración + showcase inicial: un clon nuevo arranca
     # mostrando el portfolio real de JuliXR; cada uno lo personaliza desde el dashboard.
