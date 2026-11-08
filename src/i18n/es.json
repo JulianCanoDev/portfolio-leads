@@ -181,5 +181,8 @@
   "projects.biology-lab-vr.stack": "Unity · Blender · Photoshop · VR",
   "projects.synapse-vr.challenge": "Dar inteligencia artificial a NPCs en entornos VR con Unity. Los personajes necesitaban hablar con voz natural, entender el mundo interactivo, generar imágenes dinámicas y coordinar partidas multijugador — todo desde un backend unificado.",
   "projects.synapse-vr.solution": "Backend FastAPI multiservicio con WebSockets para tiempo real: NPC conversacional con voz (TTS), generación de imágenes por IA, motor de mundo interactivo con variables compartidas, y sistema Mirror para multijugador. SDK modular para Unity con 7 paquetes independientes.",
-  "projects.synapse-vr.stack": "FastAPI · Unity · WebSocket · Python · TTS · AI Image Gen · Mirror"
+  "projects.synapse-vr.stack": "FastAPI · Unity · WebSocket · Python · TTS · AI Image Gen · Mirror",
+  "projects.projectech-bi.challenge": "SaaS B2B de inteligencia de negocios con frontend monolito de 4500 líneas y backend con consultas ineficientes (12 queries para un promedio). La IA para crear KPIs dinámicos (Text-to-SQL) representaba riesgo de alucinaciones, inyecciones SQL y exposición de datos multi-tenant.",
+  "projects.projectech-bi.solution": "Dos fases: Fase A — descomposición del monolito, optimización de queries (12→1 con LATERAL joins), Redis y 30 pruebas. Fase B — Constructor de KPIs con SQL Guard y dry-run, garantizando cero riesgos.",
+  "projects.projectech-bi.stack": "FastAPI · Next.js · PostgreSQL · Redis · SQLAlchemy · Tailwind CSS · OpenRouter LLM"
 }
