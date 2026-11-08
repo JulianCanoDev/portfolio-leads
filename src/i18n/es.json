@@ -175,5 +175,8 @@
   "set.cv.current": "CV actual",
   "set.cv.none": "Sin CV — la sección CV está oculta en el portfolio",
   "set.cv.ok": "CV actualizado ✓",
-  "set.cv.error": "No se pudo subir el CV"
+  "set.cv.error": "No se pudo subir el CV",
+  "projects.biology-lab-vr.challenge": "Reemplazar la disección de animales reales en escuelas con una experiencia VR inmersiva. Crear interacciones realistas con manos y herramientas virtuales para que estudiantes aprendan anatomía sin dañar seres vivos.",
+  "projects.biology-lab-vr.solution": "Experiencia VR completa desarrollada en Unity con manos y herramientas virtuales interactivas. Modelado 3D de especímenes en Blender, texturizado en Photoshop. Disección anatómica realista sin consecuencias éticas ni ambientales.",
+  "projects.biology-lab-vr.stack": "Unity · Blender · Photoshop · VR"
 }
