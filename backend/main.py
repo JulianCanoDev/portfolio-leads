@@ -431,9 +431,16 @@ async def get_settings_row(db: AsyncSession = Depends(get_db)):
 async def update_settings(data: SettingsIn, db: AsyncSession = Depends(get_db)):
     config = await get_config_row(db)
     changes = _legacy_to_es(data.model_dump(exclude_unset=True))
+    settings_field_map = {
+        "tagline_es": "tagline",
+        "tagline_en": "tagline_en",
+        "description_es": "description",
+        "description_en": "description_en",
+    }
     for field, value in changes.items():
-        if field in ("tagline_es", "tagline_en", "description_es", "description_en", "tagline", "description"):
-            setattr(config, field, value)
+        attr = settings_field_map.get(field, field if field not in ("tagline", "description") else None)
+        if attr is not None:
+            setattr(config, attr, value)
     await db.commit()
     await db.refresh(config)
     return settings_out(config)
@@ -561,13 +568,19 @@ async def patch_project(project_id: int, data: ProjectPatchIn, db: AsyncSession 
     changes = _legacy_to_es(data.model_dump(exclude_unset=True))
     if "tags" in changes and changes["tags"] is not None:
         project.tags = [t.strip() for t in changes["tags"] if t.strip()]
+    project_field_map = {
+        "title_es": "title",
+        "category_es": "category",
+        "challenge_es": "challenge",
+        "solution_es": "solution",
+    }
     for field in (
         "title_es", "title_en", "category_es", "category_en",
         "challenge_es", "challenge_en", "solution_es", "solution_en",
         "stack", "image_url", "sort_order", "color",
     ):
         if field in changes:
-            setattr(project, field, changes[field])
+            setattr(project, project_field_map.get(field, field), changes[field])
     await db.commit()
     await db.refresh(project)
     return project_out(project)
