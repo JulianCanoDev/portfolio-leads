@@ -3,6 +3,8 @@
 Portfolio personal + dashboard de leads con FastAPI, Astro y PostgreSQL.
 Hecho para aprender, forkear y personalizar.
 
+[Español](README.es.md) · **English** → [README.md](README.md)
+
 > **El template se clona con el portfolio real de JuliXR como showcase** — nombre, rol, colores, redes y proyectos de ejemplo. Todo se cambia desde `http://localhost:3000/dashboard` sin tocar código.
 >
 > 👉 Versión original en vivo: [portfolio.julixr.com](https://portfolio.julixr.com) — JuliXR Portfolio by Julian Cano, Full Stack & AI Developer.
