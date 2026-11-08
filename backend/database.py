@@ -75,13 +75,13 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
         for statement in MIGRATIONS:
             await conn.execute(text(statement))
-        has_result_column = await conn.execute(
+        column_check = await conn.execute(
             text(
                 "SELECT 1 FROM information_schema.columns "
                 "WHERE table_name = 'projects' AND column_name = 'result'"
             )
-        ).scalar()
-        if has_result_column:
+        )
+        if column_check.scalar():
             await conn.execute(text(RESULT_BACKFILL))
 
     # Singleton de configuración + showcase inicial: un clon nuevo arranca
