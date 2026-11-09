@@ -1,5 +1,6 @@
 ---
 import Nav from '../components/Nav.astro';
+import { AstroSeo } from '@astrolib/seo';
 import { useI18n } from '../i18n/index';
 import '../styles/global.css';
 
@@ -10,6 +11,12 @@ interface Props {
   navName?: string;
   navRole?: string;
   navCvHref?: string;
+  seo?: {
+    skills?: string[];
+    tagline?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }
 
 const {
@@ -19,8 +26,38 @@ const {
   navName,
   navRole,
   navCvHref,
+  seo,
 } = Astro.props;
 const { locale } = useI18n(Astro);
+
+const site = Astro.site ?? new URL('https://portfolio.julixr.com');
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL('/favicon.svg', site);
+const siteName = navName ? `${navName} — Portfolio` : 'juliXR Portfolio';
+
+const jsonLdPerson = seo
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: navName ?? 'Julian Cano',
+      url: site.href,
+      ...(seo.linkedin || seo.github
+        ? { sameAs: [seo.linkedin, seo.github].filter(Boolean) }
+        : {}),
+      ...(seo.skills?.length ? { knowsAbout: seo.skills } : {}),
+    }
+  : null;
+
+const jsonLdWebsite = seo
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: siteName,
+      url: site.href,
+      inLanguage: ['es', 'en'],
+      ...(seo.tagline ? { description: seo.tagline } : {}),
+    }
+  : null;
 ---
 
 <!DOCTYPE html>
@@ -28,8 +65,6 @@ const { locale } = useI18n(Astro);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -39,6 +74,36 @@ const { locale } = useI18n(Astro);
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <AstroSeo
+      title={title}
+      description={description}
+      canonical={canonical.href}
+      languageAlternates={[
+        { hreflang: 'es', href: site.href },
+        { hreflang: 'en', href: site.href },
+        { hreflang: 'x-default', href: site.href },
+      ]}
+      openGraph={{
+        url: canonical.href,
+        type: 'website',
+        title,
+        description,
+        locale: locale === 'en' ? 'en_US' : 'es_ES',
+        site_name: siteName,
+        images: [
+          {
+            url: ogImage.href,
+            width: 64,
+            height: 64,
+            alt: siteName,
+            type: 'image/svg+xml',
+          },
+        ],
+      }}
+      twitter={{ cardType: 'summary' }}
+    />
+    {jsonLdPerson && <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLdPerson)} />}
+    {jsonLdWebsite && <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLdWebsite)} />}
   </head>
   <body>
     {showNav && <Nav name={navName} roleTitle={navRole} cvHref={navCvHref} />}

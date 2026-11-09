@@ -6,7 +6,9 @@ import Skills from '../components/Skills.astro';
 import CvSection from '../components/CvSection.astro';
 import Contact from '../components/Contact.astro';
 import { getSettings, getProjects, paletteVars, pick } from '../lib/cms';
+import { useI18n } from '../i18n/index';
 
+const { locale } = useI18n(Astro);
 const settings = await getSettings();
 const projects = await getProjects();
 
@@ -21,6 +23,12 @@ const paletteStyle = Object.entries(paletteVars(settings.accent_color, settings.
   navName={settings.name}
   navRole={settings.role_title}
   navCvHref={settings.cv_url || undefined}
+  seo={{
+    skills: settings.skills,
+    tagline: pick(settings.tagline, locale) ?? undefined,
+    linkedin: settings.linkedin_url || undefined,
+    github: settings.github_url || undefined,
+  }}
 >
   <main id="top" style={paletteStyle}>
     <Hero settings={settings} />

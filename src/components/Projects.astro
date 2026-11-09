@@ -179,10 +179,42 @@ const payload = Object.fromEntries(
   const dataEl = document.getElementById('projects-data');
   const PROJECTS: Record<
     string,
-    { catLabel: string; title: string; challenge: string; solution: string; stack: string[]; tags: string[] }
+    { catLabel: string; title: string; challenge: string; solution: string; stack: string[]; tags: string[]; image: string | null }
   > = dataEl ? JSON.parse(dataEl.textContent ?? '{}') : {};
 
   let lastFocus: HTMLElement | null = null;
+
+  // Per-project meta: while the case modal is open, title + og tags describe
+  // the project (og:title = title[locale], og:description = challenge[:160],
+  // og:image = project cover when available).
+  const baseTitle = document.title;
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  const baseOg = {
+    title: ogTitle?.getAttribute('content') ?? '',
+    desc: ogDesc?.getAttribute('content') ?? '',
+    image: ogImage?.getAttribute('content') ?? '',
+  };
+  const origin = window.location.origin;
+
+  function setMeta(meta: Element | null, content: string) {
+    meta?.setAttribute('content', content);
+  }
+
+  function applyProjectMeta(title: string, challenge: string, image: string | null) {
+    document.title = `${title} — ${baseTitle}`;
+    setMeta(ogTitle, title);
+    setMeta(ogDesc, challenge.slice(0, 157) + (challenge.length > 157 ? '…' : ''));
+    if (image) setMeta(ogImage, image.startsWith('http') ? image : origin + image);
+  }
+
+  function restoreMeta() {
+    document.title = baseTitle;
+    setMeta(ogTitle, baseOg.title);
+    setMeta(ogDesc, baseOg.desc);
+    setMeta(ogImage, baseOg.image);
+  }
 
   function fillChips(container: HTMLElement, values: string[]) {
     container.innerHTML = '';
@@ -206,6 +238,7 @@ const payload = Object.fromEntries(
     mSolution.textContent = p.solution;
     fillChips(mStack, p.stack);
     fillChips(mTags, p.tags);
+    applyProjectMeta(p.title, p.challenge, PROJECTS[key]?.image ?? null);
     lastFocus = document.activeElement as HTMLElement | null;
     modal.classList.add('open');
     document.body.classList.add('no-scroll');
@@ -213,6 +246,7 @@ const payload = Object.fromEntries(
   }
 
   function closeModal() {
+    restoreMeta();
     modal.classList.remove('open');
     document.body.classList.remove('no-scroll');
     lastFocus?.focus();
