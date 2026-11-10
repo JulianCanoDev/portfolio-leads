@@ -7,8 +7,8 @@ interface Props {
 }
 
 const { settings } = Astro.props;
-const roleTitle = pick(settings.role_title, locale) ?? settings.role_title.es ?? '';
 const { locale, t } = useI18n(Astro);
+const roleTitle = pick(settings.role_title, locale) ?? settings.role_title.es ?? '';
 const tagline = pick(settings.tagline, locale) || t('hero.tagline');
 const description = pick(settings.description, locale) || t('hero.desc');
 ---
