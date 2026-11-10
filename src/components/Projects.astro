@@ -1,6 +1,7 @@
 ---
 import { useI18n } from '../i18n/index';
 import { pick, type CmsProject } from '../lib/cms';
+import Picture from './Picture.astro';
 
 interface Props {
   projects: CmsProject[];
@@ -80,7 +81,7 @@ const payload = Object.fromEntries(
             <article class="case reveal" data-project={project.id} tabindex="0" role="button" aria-haspopup="dialog">
               <div class="case-cover">
                 {project.image_url ? (
-                  <img src={project.image_url} alt={project.title} loading="lazy" />
+                  <Picture src={project.image_url} alt={project.title} className="case-cover-img" />
                 ) : (
                   <Fragment set:html={FALLBACK_COVER} />
                 )}
