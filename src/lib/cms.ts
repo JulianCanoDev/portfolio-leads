@@ -5,7 +5,7 @@ export interface Localized2 {}
 
 export interface SiteSettings {
   name: string;
-  role_title: string;
+  role_title: Localized;
   tagline: Localized;
   description: Localized;
   accent_color: string;
@@ -43,7 +43,10 @@ export function pick(field: Localized | null | undefined, locale: string): strin
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   name: 'Julian Cano',
-  role_title: 'Full Stack & AI Developer | AWS Cloud | AI Automation & Agents',
+  role_title: {
+    es: 'Desarrollador Full Stack & IA | AWS Cloud | Automatización & Agentes de IA',
+    en: 'Full Stack & AI Developer | AWS Cloud | AI Automation & Agents',
+  },
   tagline: {
     es: 'Sistemas donde convergen IA, automatización y desarrollo web',
     en: 'Building systems where AI, automation and web converge',
@@ -141,11 +144,22 @@ export const DEFAULT_PROJECTS: CmsProject[] = [
 
 const serverBase = () => process.env.BACKEND_URL ?? 'http://localhost:8000';
 
+// Older API versions returned some CMS fields as plain strings; wrap them
+// into the localized shape so pick() keeps working during upgrades.
+function normalize(data: Record<string, unknown>): Partial<SiteSettings> {
+  for (const field of ['role_title', 'tagline', 'description'] as const) {
+    if (typeof data[field] === 'string') {
+      data[field] = { es: data[field] as string, en: null };
+    }
+  }
+  return data as Partial<SiteSettings>;
+}
+
 export async function getSettings(): Promise<SiteSettings> {
   try {
     const res = await fetch(`${serverBase()}/api/settings`, { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
-    return { ...DEFAULT_SETTINGS, ...(await res.json()) };
+    return { ...DEFAULT_SETTINGS, ...normalize(await res.json()) };
   } catch {
     return DEFAULT_SETTINGS;
   }

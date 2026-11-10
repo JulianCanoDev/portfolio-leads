@@ -84,7 +84,7 @@ class StatsOut(BaseModel):
 
 class SettingsOut(BaseModel):
     name: str
-    role_title: str
+    role_title: dict
     tagline: dict
     description: dict
     accent_color: str
@@ -100,7 +100,7 @@ class SettingsOut(BaseModel):
 def settings_out(c) -> dict:
     return {
         "name": c.name,
-        "role_title": c.role_title,
+        "role_title": {"es": c.role_title, "en": c.role_title_en},
         "tagline": {"es": c.tagline, "en": c.tagline_en},
         "description": {"es": c.description, "en": c.description_en},
         "accent_color": c.accent_color,
@@ -117,6 +117,8 @@ def settings_out(c) -> dict:
 class SettingsIn(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     role_title: str | None = Field(default=None, min_length=1, max_length=200)
+    role_title_es: str | None = Field(default=None, min_length=1, max_length=200)
+    role_title_en: str | None = Field(default=None, min_length=1, max_length=200)
     tagline: str | None = Field(default=None, max_length=1000)
     tagline_es: str | None = Field(default=None, max_length=1000)
     tagline_en: str | None = Field(default=None, max_length=1000)
@@ -139,6 +141,7 @@ def _legacy_to_es(data: dict) -> dict:
         ("category", "category_es"),
         ("challenge", "challenge_es"),
         ("solution", "solution_es"),
+        ("role_title", "role_title_es"),
         ("tagline", "tagline_es"),
         ("description", "description_es"),
     ):
@@ -432,6 +435,8 @@ async def update_settings(data: SettingsIn, db: AsyncSession = Depends(get_db)):
     config = await get_config_row(db)
     changes = _legacy_to_es(data.model_dump(exclude_unset=True))
     settings_field_map = {
+        "role_title_es": "role_title",
+        "role_title_en": "role_title_en",
         "tagline_es": "tagline",
         "tagline_en": "tagline_en",
         "description_es": "description",

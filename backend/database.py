@@ -30,6 +30,7 @@ MIGRATIONS = (
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}'",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS cv_url VARCHAR(500) DEFAULT '/CV_Julian_Cano.pdf'",
     "UPDATE config SET cv_url = '/CV_Julian_Cano.pdf' WHERE cv_url IS NULL",
+    "ALTER TABLE config ADD COLUMN IF NOT EXISTS role_title_en VARCHAR(200)",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS tagline_en TEXT",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS description TEXT",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS description_en TEXT",

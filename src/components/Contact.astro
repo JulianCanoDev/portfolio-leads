@@ -1,5 +1,6 @@
 ---
 import { useI18n } from '../i18n/index';
+import { pick } from '../lib/cms';
 import type { SiteSettings } from '../lib/cms';
 
 interface Props {
@@ -7,7 +8,8 @@ interface Props {
 }
 
 const { settings } = Astro.props;
-const { t } = useI18n(Astro);
+const { locale, t } = useI18n(Astro);
+const roleTitle = pick(settings.role_title, locale) ?? settings.role_title.es ?? '';
 
 const waHref = settings.whatsapp_phone
   ? settings.whatsapp_phone.startsWith('http')
@@ -94,7 +96,7 @@ const socials = [
 
 <footer>
   <div class="wrap foot-inner">
-    <p>© {new Date().getFullYear()} {settings.name} — {settings.role_title}</p>
+    <p>© {new Date().getFullYear()} {settings.name} — {roleTitle}</p>
   </div>
   <div class="wrap foot-credit">
     <p>{t('foot.made', { name: settings.name })}</p>

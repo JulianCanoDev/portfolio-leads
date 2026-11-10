@@ -7,6 +7,7 @@ interface Props {
 }
 
 const { settings } = Astro.props;
+const roleTitle = pick(settings.role_title, locale) ?? settings.role_title.es ?? '';
 const { locale, t } = useI18n(Astro);
 const tagline = pick(settings.tagline, locale) || t('hero.tagline');
 const description = pick(settings.description, locale) || t('hero.desc');
@@ -23,7 +24,7 @@ const description = pick(settings.description, locale) || t('hero.desc');
     <span class="eyebrow"><span class="pulse-dot"></span>{t('hero.eyebrow')}</span>
     <p class="hero-greeting">{t('hero.greeting')}</p>
     <h1>{settings.name}</h1>
-    <p class="role">{settings.role_title}</p>
+    <p class="role">{roleTitle}</p>
     <h2>{tagline}</h2>
     <p class="hero-desc">{description}</p>
     <div class="hero-actions">

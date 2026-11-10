@@ -25,11 +25,6 @@ const { locale, t } = useI18n(Astro);
         <label for="name">{t('set.name')}</label>
         <input id="name" name="name" type="text" maxlength="100" required />
       </div>
-      <div class="field">
-        <label for="role_title">{t('set.role')}</label>
-        <input id="role_title" name="role_title" type="text" maxlength="200" required />
-      </div>
-
       <div class="lang-toggle editor-lang" role="group" aria-label="Language">
         <button class={`lang-btn${locale === 'es' ? ' active' : ''}`} type="button" data-form-lang="es">ES</button>
         <span class="lang-sep">/</span>
@@ -37,6 +32,10 @@ const { locale, t } = useI18n(Astro);
       </div>
 
       <div data-lang-pane="es">
+        <div class="field">
+          <label for="role_title_es">{t('set.role')} (ES)</label>
+          <input id="role_title_es" name="role_title_es" type="text" maxlength="200" required />
+        </div>
         <div class="field">
           <label for="tagline_es">{t('set.tagline')} (ES)</label>
           <textarea id="tagline_es" name="tagline_es" maxlength="1000"></textarea>
@@ -48,6 +47,10 @@ const { locale, t } = useI18n(Astro);
       </div>
 
       <div data-lang-pane="en" hidden={locale !== 'en'}>
+        <div class="field">
+          <label for="role_title_en">{t('set.role')} (EN)</label>
+          <input id="role_title_en" name="role_title_en" type="text" maxlength="200" />
+        </div>
         <div class="field">
           <label for="tagline_en">{t('set.tagline')} (EN)</label>
           <textarea id="tagline_en" name="tagline_en" maxlength="1000"></textarea>
@@ -153,7 +156,8 @@ const { locale, t } = useI18n(Astro);
 
   const inputs = {
     name: document.getElementById('name') as HTMLInputElement,
-    role_title: document.getElementById('role_title') as HTMLInputElement,
+    role_title_es: document.getElementById('role_title_es') as HTMLInputElement,
+    role_title_en: document.getElementById('role_title_en') as HTMLInputElement,
     tagline_es: document.getElementById('tagline_es') as HTMLTextAreaElement,
     tagline_en: document.getElementById('tagline_en') as HTMLTextAreaElement,
     description_es: document.getElementById('description_es') as HTMLTextAreaElement,
@@ -226,7 +230,7 @@ const { locale, t } = useI18n(Astro);
 
   function refreshPreview() {
     pvName.textContent = inputs.name.value || '—';
-    pvRole.textContent = inputs.role_title.value || '';
+    pvRole.textContent = inputs.role_title_es.value || inputs.role_title_en.value || '';
     pvTagline.textContent = inputs.tagline_es.value || inputs.tagline_en.value || '';
     preview.style.setProperty('--accent', accent.value);
     preview.style.setProperty('--accent-glow', towardWhite(accent.value, 0.28));
@@ -289,7 +293,8 @@ const { locale, t } = useI18n(Astro);
     try {
       const body = {
         name: inputs.name.value.trim(),
-        role_title: inputs.role_title.value.trim(),
+        role_title_es: inputs.role_title_es.value.trim() || null,
+        role_title_en: inputs.role_title_en.value.trim() || null,
         tagline_es: (inputs.tagline_es as unknown as HTMLInputElement).value.trim() || null,
         tagline_en: (inputs.tagline_en as unknown as HTMLInputElement).value.trim() || null,
         description_es: (inputs.description_es as unknown as HTMLInputElement).value.trim() || null,

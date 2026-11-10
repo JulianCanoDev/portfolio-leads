@@ -12,16 +12,17 @@ const { locale } = useI18n(Astro);
 const settings = await getSettings();
 const projects = await getProjects();
 
+const roleTitle = pick(settings.role_title, locale) ?? settings.role_title.es ?? '';
 const paletteStyle = Object.entries(paletteVars(settings.accent_color, settings.secondary_color))
   .map(([key, value]) => `${key}:${value}`)
   .join(';');
 ---
 
 <Layout
-  title={`${settings.name} — ${settings.role_title}`}
-  description={`${settings.name} — ${settings.role_title}. ${pick(settings.tagline, 'es') ?? ''}`}
+  title={`${settings.name} — ${roleTitle}`}
+  description={`${settings.name} — ${roleTitle}. ${pick(settings.tagline, 'es') ?? ''}`}
   navName={settings.name}
-  navRole={settings.role_title}
+  navRole={roleTitle}
   navCvHref={settings.cv_url || undefined}
   seo={{
     skills: settings.skills,

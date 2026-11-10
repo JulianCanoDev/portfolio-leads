@@ -30,6 +30,11 @@ class Config(Base):
     name: Mapped[str] = mapped_column(String(100), default="Julian Cano", server_default="Julian Cano")
     role_title: Mapped[str] = mapped_column(
         String(200),
+        default="Desarrollador Full Stack & IA | AWS Cloud | Automatización & Agentes de IA",
+        server_default="Desarrollador Full Stack & IA | AWS Cloud | Automatización & Agentes de IA",
+    )
+    role_title_en: Mapped[str | None] = mapped_column(
+        String(200),
         default="Full Stack & AI Developer | AWS Cloud | AI Automation & Agents",
         server_default="Full Stack & AI Developer | AWS Cloud | AI Automation & Agents",
     )
