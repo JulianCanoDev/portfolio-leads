@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     # Imágenes subidas (volumen compartido con nginx)
     upload_dir: str = Field(default="/srv/uploads")
 
+    # Evolution API — notificación de leads por WhatsApp
+    evo_api_url: str = Field(default="https://evolution.example.com")
+    evo_instance: str = Field(default="")
+    evo_api_key: str = Field(default="")
+    evo_notify_number: str = Field(default="")
+
 
 @lru_cache
 def get_settings() -> Settings:

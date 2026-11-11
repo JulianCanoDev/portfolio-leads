@@ -1,12 +1,15 @@
 """API del portfolio: auth JWT, leads, settings (CMS) y proyectos (CRUD + imágenes)."""
 
+import asyncio
 import hmac
+import logging
 import math
 import mimetypes
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
+import httpx
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
@@ -322,6 +325,36 @@ async def health(db: AsyncSession = Depends(get_db)):
     return {"status": "ok", "total": total}
 
 
+# ---------- Evolution API: notificación de leads por WhatsApp ----------
+logger = logging.getLogger("voty.notify")
+
+
+async def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, message: str):
+    """Fire-and-forget: nunca rompe el alta del lead si Evolution falla."""
+    if not settings.evo_api_key:
+        return
+    lead_wa = whatsapp or "(no compartió)"
+    ahora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
+    texto = (
+        f"\U0001F4E9 *Nuevo lead — portfolio.julixr.com*\n\n"
+        f"\U0001F464 *Nombre:* {name}\n"
+        f"\U0001F4E7 *Email:* {email}\n"
+        f"\U0001F4F1 *WhatsApp:* {lead_wa}\n"
+        f"\U0001F4AC *Mensaje:* {message}\n\n"
+        f"\U0001F550 {ahora} UTC"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.post(
+                f"{settings.evo_api_url}/message/sendText/{settings.evo_instance}",
+                headers={"apikey": settings.evo_api_key},
+                json={"number": settings.evo_notify_number, "text": texto},
+            )
+            res.raise_for_status()
+    except Exception:
+        logger.warning("Evolution API: no se pudo notificar el lead", exc_info=True)
+
+
 @app.post("/api/contact", response_model=ContactOut, status_code=201)
 async def create_lead(data: ContactIn, db: AsyncSession = Depends(get_db)):
     lead = Lead(
@@ -332,6 +365,11 @@ async def create_lead(data: ContactIn, db: AsyncSession = Depends(get_db)):
     )
     db.add(lead)
     await db.commit()
+    asyncio.create_task(
+        notify_lead_by_whatsapp(
+            data.name.strip(), str(data.email), lead.whatsapp, data.message.strip()
+        )
+    )
     return ContactOut(id=lead.id)
 
 
