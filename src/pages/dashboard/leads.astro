@@ -123,7 +123,7 @@ const statChips = [
             </thead>
             <tbody>
               {items.map((lead) => (
-                <tr>
+                <tr data-lead-open data-id={lead.id} tabindex="0" role="button">
                   <td class="lead-name">{lead.name}</td>
                   <td class="lead-email">{lead.email}</td>
                   <td class="lead-date">{lead.whatsapp ?? '—'}</td>
@@ -157,10 +157,99 @@ const statChips = [
       </nav>
     )
   }
+
+<script type="application/json" id="leads-data" is:inline set:html={JSON.stringify(Object.fromEntries(items.map((lead) => [lead.id, lead])))} />
+
+<div class="modal" id="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lmTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel lead-panel">
+    <button class="modal-close" data-close aria-label={t('proj.close')}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-body">
+      <div class="case-top"><span class="cat" id="lmStatus"></span></div>
+      <h3 id="lmTitle"></h3>
+      <div class="cs-block"><p class="cs-label">{t('leads.col.email')}</p><p id="lmEmail"></p></div>
+      <div class="cs-block"><p class="cs-label">WhatsApp</p><p id="lmWa"></p></div>
+      <div class="cs-block"><p class="cs-label">{t('leads.detail.received')}</p><p id="lmDate"></p></div>
+      <div class="cs-block"><p class="cs-label">{t('leads.col.message')}</p><p id="lmMsg" class="lm-msg"></p></div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" id="lmMail" href="#">
+          {t('leads.detail.reply')} · Email
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16v12H4z"></path>
+            <polyline points="4 7 12 13 20 7"></polyline>
+          </svg>
+        </a>
+        <a class="btn btn-ghost" id="lmWaLink" href="#" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <button class="btn btn-ghost" data-close>{t('proj.close')}</button>
+      </div>
+    </div>
+  </div>
+</div>
 </DashboardLayout>
 
 <script>
   import { t } from '../../i18n/index';
+
+  // Lead detail modal — full message + reply links
+  const leadModal = document.getElementById('lead-modal')!;
+  const lmTitle = document.getElementById('lmTitle')!;
+  const lmStatus = document.getElementById('lmStatus')!;
+  const lmEmail = document.getElementById('lmEmail')!;
+  const lmWa = document.getElementById('lmWa')!;
+  const lmDate = document.getElementById('lmDate')!;
+  const lmMsg = document.getElementById('lmMsg')!;
+  const lmMail = document.getElementById('lmMail') as HTMLAnchorElement;
+  const lmWaLink = document.getElementById('lmWaLink') as HTMLAnchorElement;
+
+  const leadsEl = document.getElementById('leads-data');
+  const LEADS: Record<string, { name: string; email: string; message: string; whatsapp: string | null; status: string; created_at: string }> =
+    leadsEl ? JSON.parse(leadsEl.textContent ?? '{}') : {};
+
+  const fmt = (iso: string) => new Date(iso).toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'es-CO', { dateStyle: 'full', timeStyle: 'short' });
+
+  function openLead(id: string) {
+    const lead = LEADS[id];
+    if (!lead) return;
+    lmTitle.textContent = lead.name;
+    lmStatus.className = 'cat ' + (lead.status === 'contacted' ? 'bot' : 'ai');
+    lmStatus.textContent = lead.status === 'contacted' ? t('leads.status.contacted') : t('leads.status.new');
+    lmEmail.textContent = lead.email;
+    lmWa.textContent = lead.whatsapp ?? '—';
+    lmDate.textContent = fmt(lead.created_at);
+    lmMsg.textContent = lead.message;
+    lmMail.href = `mailto:${lead.email}?subject=${encodeURIComponent('Portfolio — ' + lead.name)}`;
+    lmWaLink.href = lead.whatsapp ? `https://wa.me/${lead.whatsapp.replace(/\D/g, '')}` : '#';
+    leadModal.classList.add('open');
+    document.body.classList.add('no-scroll');
+  }
+
+  function closeLead() {
+    leadModal.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-lead-open]').forEach((row) => {
+    row.addEventListener('click', () => openLead(row.dataset.id!));
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openLead(row.dataset.id!);
+      }
+    });
+  });
+
+  leadModal.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-close]')) closeLead();
+    else if (e.target === leadModal || (e.target as HTMLElement).classList.contains('modal-backdrop')) closeLead();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && leadModal.classList.contains('open')) closeLead();
+  });
 
   document.querySelectorAll<HTMLButtonElement>('[data-mark]').forEach((btn) => {
     btn.addEventListener('click', async () => {

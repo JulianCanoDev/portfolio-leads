@@ -156,5 +156,8 @@
   "set.description": "Descripción",
   "contact.whatsapp": "WhatsApp (opcional)",
   "contact.ph.whatsapp": "3001234567",
-  "leads.col.whatsapp": "WhatsApp"
+  "leads.col.whatsapp": "WhatsApp",
+  "leads.detail.title": "Detalle del lead",
+  "leads.detail.reply": "Responder",
+  "leads.detail.received": "Recibido"
 }

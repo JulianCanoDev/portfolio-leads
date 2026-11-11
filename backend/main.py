@@ -3,6 +3,7 @@
 import asyncio
 import hmac
 import logging
+import random
 import math
 import mimetypes
 import os
@@ -344,11 +345,19 @@ async def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, m
         f"\U0001F550 {ahora} UTC"
     )
     try:
+        # Simulación de tipeo: "escribiendo…" visible 1.2–2.8 s antes de
+        # enviar, para reducir el riesgo de ban del número por patrones
+        # 100% instantáneos de Meta.
         async with httpx.AsyncClient(timeout=10) as client:
             res = await client.post(
                 f"{settings.evo_api_url}/message/sendText/{settings.evo_instance}",
                 headers={"apikey": settings.evo_api_key},
-                json={"number": settings.evo_notify_number, "text": texto},
+                json={
+                    "number": settings.evo_notify_number,
+                    "text": texto,
+                    "presence": "composing",
+                    "delay": random.randint(1200, 2800),
+                },
             )
             res.raise_for_status()
     except Exception:

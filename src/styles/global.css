@@ -1140,6 +1140,28 @@ body {
   border-color: var(--accent-glow);
 }
 
+/* ---------- Lead detail ---------- */
+.lead-panel {
+  width: min(640px, 100%);
+}
+
+.lm-msg {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--fg);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.leads-table tr[data-lead-open] {
+  cursor: pointer;
+}
+
+.leads-table tr[data-lead-open]:focus-visible {
+  outline: 2px solid var(--accent-glow);
+  outline-offset: -2px;
+}
+
 /* ---------- CV download ---------- */
 .cv-section {
   padding: 26px 0 66px;
