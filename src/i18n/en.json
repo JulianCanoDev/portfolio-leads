@@ -158,5 +158,6 @@
   "leads.col.whatsapp": "WhatsApp",
   "leads.detail.title": "Lead detail",
   "leads.detail.reply": "Reply",
-  "leads.detail.received": "Received"
+  "leads.detail.received": "Received",
+  "contact.wa.error": "Check the number: {iso} uses {min} to {max} digits"
 }

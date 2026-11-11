@@ -159,5 +159,6 @@
   "leads.col.whatsapp": "WhatsApp",
   "leads.detail.title": "Detalle del lead",
   "leads.detail.reply": "Responder",
-  "leads.detail.received": "Recibido"
+  "leads.detail.received": "Recibido",
+  "contact.wa.error": "Revisá el número: para {iso} son entre {min} y {max} dígitos"
 }

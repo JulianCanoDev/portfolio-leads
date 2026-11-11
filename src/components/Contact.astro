@@ -177,6 +177,45 @@ const socials = [
   }
 
   ccBtn.addEventListener('click', () => (ccPanel.hidden ? openCc() : closeCc()));
+
+  // WhatsApp input: solo dígitos, largo esperado por país (CO = 10)
+  const waInput = document.getElementById('whatsapp') as HTMLInputElement | null;
+  const WA_LENGTHS: Record<string, [number, number]> = {
+    CO: [10, 10], MX: [10, 10], US: [10, 10], CA: [10, 10],
+    ES: [9, 9], CL: [9, 9], PE: [9, 9], AR: [10, 11], BR: [10, 11],
+    UY: [8, 9], VE: [10, 10], EC: [9, 10], BO: [8, 8], PY: [9, 10],
+    GB: [10, 10], DE: [10, 11], FR: [9, 9], IT: [9, 11],
+  };
+
+  function waIso(): string {
+    const code = ccInput.value;
+    const hit = CC_DATA.find((c) => c.code === code);
+    return hit?.iso ?? '';
+  }
+
+  function waValidate(): boolean {
+    if (!waInput || !status) return true;
+    const raw = waInput.value.replace(/\D/g, '');
+    if (!raw) {
+      status.textContent = '';
+      return true;
+    }
+    const [min, max] = WA_LENGTHS[waIso()] ?? [7, 15];
+    if (raw.length < min || raw.length > max) {
+      status.textContent = t('contact.wa.error', { iso: waIso() || '?', min, max });
+      status.style.color = '#fbbf24';
+      status.classList.add('show');
+      return false;
+    }
+    status.textContent = '';
+    return true;
+  }
+
+  waInput?.addEventListener('input', () => {
+    const digits = waInput.value.replace(/\D/g, '').slice(0, 15);
+    waInput.value = digits;
+    waValidate();
+  });
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (!ccPanel.hidden && !target.closest('.input-row')) closeCc();
@@ -192,6 +231,7 @@ const socials = [
     const name = form.name.value.trim();
     const email = form.email.value.trim();
     const msg = form.message.value.trim();
+    if (!waValidate()) return;
     const cc = form.countryCode?.value || '+57';
     const waRaw = form.whatsapp?.value.trim() ?? '';
     const fullWa = waRaw ? cc + waRaw.replace(/^\+/, '') : undefined;

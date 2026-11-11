@@ -14,7 +14,9 @@ import httpx
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, EmailStr, Field, model_validator
+import re
+
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +40,16 @@ class ContactIn(BaseModel):
     email: EmailStr
     message: str = Field(min_length=1, max_length=5000)
     whatsapp: str | None = Field(default=None, max_length=50)
+
+    @field_validator("whatsapp")
+    @classmethod
+    def _clean_whatsapp(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        digits = re.sub(r"\D", "", value)
+        if len(digits) < 8 or len(digits) > 16:
+            raise ValueError("whatsapp debe tener entre 8 y 16 digitos")
+        return digits
 
 
 class ContactOut(BaseModel):
@@ -323,7 +335,7 @@ app.mount(
 @app.get("/api/health")
 async def health(db: AsyncSession = Depends(get_db)):
     total = (await db.scalar(select(func.count()).select_from(Lead))) or 0
-    return {"status": "ok", "total": total}
+    return {"status": "ok", "total": total, "evo_configured": bool(settings.evo_api_key)}
 
 
 # ---------- Evolution API: notificación de leads por WhatsApp ----------
