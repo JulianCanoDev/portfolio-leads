@@ -153,5 +153,8 @@
   "set.cv.error": "No se pudo subir el CV",
   "padmin.f.color": "Color",
   "padmin.f.title_x": "Título",
-  "set.description": "Descripción"
+  "set.description": "Descripción",
+  "contact.whatsapp": "WhatsApp (opcional)",
+  "contact.ph.whatsapp": "3001234567",
+  "leads.col.whatsapp": "WhatsApp"
 }

@@ -1034,6 +1034,29 @@ body {
   transition: opacity 0.18s ease;
 }
 
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.code-select {
+  width: 104px;
+  flex-shrink: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 12px 10px;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.code-select:focus {
+  outline: none;
+  border-color: var(--accent-glow);
+}
+
 /* ---------- CV download ---------- */
 .cv-section {
   padding: 26px 0 66px;

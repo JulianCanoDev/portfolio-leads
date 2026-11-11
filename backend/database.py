@@ -27,6 +27,7 @@ MIGRATIONS = (
     "ALTER TABLE projects ADD COLUMN IF NOT EXISTS solution_en TEXT",
     "ALTER TABLE projects ADD COLUMN IF NOT EXISTS color VARCHAR(7)",
     "ALTER TABLE leads ADD COLUMN IF NOT EXISTS contacted_at TIMESTAMPTZ",
+    "ALTER TABLE leads ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(50)",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}'",
     "ALTER TABLE config ADD COLUMN IF NOT EXISTS cv_url VARCHAR(500) DEFAULT '/CV_Julian_Cano.pdf'",
     "UPDATE config SET cv_url = '/CV_Julian_Cano.pdf' WHERE cv_url IS NULL",

@@ -68,7 +68,7 @@ portfolio/
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/contact` | — | Create a lead `{ name, email, message }` |
+| POST | `/api/contact` | — | Create a lead `{ name, email, message, whatsapp? }` |
 | GET | `/api/health` | — | `{ status: "ok", total: N }` |
 | GET | `/api/settings` | — | Site configuration (CMS) |
 | GET | `/api/projects` | — | Projects ordered by `sort_order` |

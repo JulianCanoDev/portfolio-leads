@@ -33,6 +33,7 @@ class ContactIn(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     email: EmailStr
     message: str = Field(min_length=1, max_length=5000)
+    whatsapp: str | None = Field(default=None, max_length=50)
 
 
 class ContactOut(BaseModel):
@@ -57,6 +58,7 @@ class LeadOut(BaseModel):
     name: str
     email: str
     message: str
+    whatsapp: str | None
     status: str
     contacted_at: datetime | None
     created_at: datetime
@@ -322,7 +324,12 @@ async def health(db: AsyncSession = Depends(get_db)):
 
 @app.post("/api/contact", response_model=ContactOut, status_code=201)
 async def create_lead(data: ContactIn, db: AsyncSession = Depends(get_db)):
-    lead = Lead(name=data.name.strip(), email=str(data.email), message=data.message.strip())
+    lead = Lead(
+        name=data.name.strip(),
+        email=str(data.email),
+        message=data.message.strip(),
+        whatsapp=(data.whatsapp or "").strip() or None,
+    )
     db.add(lead)
     await db.commit()
     return ContactOut(id=lead.id)

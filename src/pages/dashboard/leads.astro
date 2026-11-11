@@ -114,6 +114,7 @@ const statChips = [
               <tr>
                 <th>{t('leads.col.name')}</th>
                 <th>{t('leads.col.email')}</th>
+                <th>{t('leads.col.whatsapp')}</th>
                 <th>{t('leads.col.message')}</th>
                 <th>{t('leads.col.date')}</th>
                 <th>{t('leads.col.status')}</th>
@@ -125,6 +126,7 @@ const statChips = [
                 <tr>
                   <td class="lead-name">{lead.name}</td>
                   <td class="lead-email">{lead.email}</td>
+                  <td class="lead-date">{lead.whatsapp ?? '—'}</td>
                   <td class="lead-msg" title={lead.message}>{preview(lead.message)}</td>
                   <td class="lead-date">{fmtDate(lead.created_at)}</td>
                   <td>

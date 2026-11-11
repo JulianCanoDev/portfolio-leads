@@ -5,6 +5,7 @@ export interface Lead {
   name: string;
   email: string;
   message: string;
+  whatsapp: string | null;
   status: string;
   created_at: string;
 }

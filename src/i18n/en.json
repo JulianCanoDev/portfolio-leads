@@ -152,5 +152,8 @@
   "set.cv.ok": "CV updated ✓",
   "set.cv.error": "Couldn't upload the CV",
   "padmin.f.color": "Color",
-  "set.description": "Description"
+  "set.description": "Description",
+  "contact.whatsapp": "WhatsApp (optional)",
+  "contact.ph.whatsapp": "3001234567",
+  "leads.col.whatsapp": "WhatsApp"
 }
