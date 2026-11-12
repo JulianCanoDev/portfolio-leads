@@ -23,10 +23,10 @@ services:
       ADMIN_PASS: ${ADMIN_PASS}
       JWT_SECRET: ${JWT_SECRET}
       JWT_TTL_HOURS: ${JWT_TTL_HOURS:-24}
-      EVO_API_URL: ${EVO_API_URL:-https://evolution.example.com}
-      EVO_INSTANCE: ${EVO_INSTANCE:-your-instance}
+      EVO_API_URL: ${EVO_API_URL:-}
+      EVO_INSTANCE: ${EVO_INSTANCE:-}
       EVO_API_KEY: ${EVO_API_KEY:-}
-      EVO_NOTIFY_NUMBER: ${EVO_NOTIFY_NUMBER:-000000000000}
+      EVO_NOTIFY_NUMBER: ${EVO_NOTIFY_NUMBER:-}
     volumes:
       - uploads:/srv/uploads
     depends_on:

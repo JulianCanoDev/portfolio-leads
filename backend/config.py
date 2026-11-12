@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     site_domain: str = Field(default="portfolio.julixr.com")
 
     # Evolution API — notificación de leads por WhatsApp
-    evo_api_url: str = Field(default="https://evolution.example.com")
+    evo_api_url: str = Field(default="")
     evo_instance: str = Field(default="")
     evo_api_key: str = Field(default="")
     evo_notify_number: str = Field(default="")
