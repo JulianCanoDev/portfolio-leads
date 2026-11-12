@@ -419,7 +419,11 @@ def _origin_allowed(request: Request) -> bool:
 
 
 def _has_admin_token(request: Request) -> bool:
-    token = extract_token(request)
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        auth = request.headers.get("authorization", "")
+        if auth.lower().startswith("bearer "):
+            token = auth[7:].strip()
     if not token:
         return False
     try:
