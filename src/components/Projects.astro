@@ -38,6 +38,7 @@ const catClass = (category: string) => {
   return 'ai';
 };
 
+const isVr = (title: string) => /\bvr\b|vr/i.test(title);
 const splitStack = (stack: string | null) =>
   (stack ?? '')
     .split(/[,;·]/)
@@ -104,7 +105,7 @@ const payload = Object.fromEntries(
             </article>
           ))}
 
-          <article class="case placeholder">
+          <article class="case placeholder" data-tilt>
             <div class="case-body">
               <div class="case-top">
                 <span class="cat dashed">{t('ph.badge')}</span>
@@ -281,4 +282,31 @@ const payload = Object.fromEntries(
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
+
+  // Tilt 3D sutil — solo con mouse real y sin motion-reduce; las cards VR
+  // (vr-deep) reciben el doble de inclinación y más translateZ de capas.
+  const canTilt =
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canTilt) {
+    document.querySelectorAll<HTMLElement>('.case[data-tilt]').forEach((card) => {
+      const deep = card.classList.contains('vr-deep');
+      const maxDeg = deep ? 10 : 5;
+      const lift = deep ? 10 : 4;
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.classList.add('tilting');
+        card.style.transform = `perspective(900px) rotateX(${(-y * maxDeg).toFixed(2)}deg) rotateY(${(x * maxDeg).toFixed(2)}deg) translateZ(${lift}px)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('tilting');
+        card.style.transform = '';
+      });
+    });
+  }
 </script>

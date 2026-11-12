@@ -47,6 +47,26 @@ const description = pick(settings.description, locale) || t('hero.desc');
 </section>
 
 <script>
+  // Parallax leve de los glows del hero — profundidad al scrollear
+  const glows = document.querySelectorAll<HTMLElement>('.hero-glow');
+  if (glows.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let glowRaf: number | null = null;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (glowRaf !== null) return;
+        glowRaf = requestAnimationFrame(() => {
+          const y = window.scrollY;
+          glows.forEach((glow, i) => {
+            glow.style.transform = `translateY(${(y * (i === 0 ? 0.06 : 0.09)).toFixed(1)}px)`;
+          });
+          glowRaf = null;
+        });
+      },
+      { passive: true },
+    );
+  }
+
   // Floating particles (skipped when the user prefers reduced motion)
   const pc = document.getElementById('particles');
   if (pc && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
