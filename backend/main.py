@@ -454,8 +454,7 @@ def _origin_allowed(request: Request) -> bool:
     if not origin:
         return False
     try:
-        host = (request.url.hostname or "").lower()
-        allowed = {settings.site_domain.lower(), "localhost", "127.0.0.1", host}
+        allowed = {settings.site_domain.lower(), "localhost", "127.0.0.1"}
         return (origin.split("//", 1)[-1].split("/")[0].split(":")[0].lower() in allowed)
     except Exception:
         return False
