@@ -79,7 +79,14 @@ const payload = Object.fromEntries(
       ) : (
         <div class="case-grid">
           {localized.map((project) => (
-            <article class="case reveal" data-project={project.id} tabindex="0" role="button" aria-haspopup="dialog">
+            <article
+              class={`case reveal${/\bvr\b|vr/i.test(project.title) ? ' vr-deep' : ''}`}
+              data-project={project.id}
+              data-tilt
+              tabindex="0"
+              role="button"
+              aria-haspopup="dialog"
+            >
               <div class="case-cover">
                 {project.image_url ? (
                   <Picture src={project.image_url} alt={project.title} className="case-cover-img" />
