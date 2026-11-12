@@ -518,12 +518,44 @@ async def create_lead(
     return ContactOut(id=lead.id)
 
 
+# ---------- Anti-bruteforce del login ----------
+LOGIN_WINDOW = 60.0
+LOGIN_MAX_ATTEMPTS = 5
+_login_attempts: dict[str, list[float]] = {}
+
+
+def _login_throttled(ip: str) -> str | None:
+    import time as _time
+
+    now = _time.time()
+    attempts = [t for t in _login_attempts.get(ip, []) if now - t < LOGIN_WINDOW]
+    if len(attempts) >= LOGIN_MAX_ATTEMPTS:
+        # No se registra el intento: la ventana no se extiende mientras dura el bloqueo
+        _login_attempts[ip] = attempts
+        return f"demasiados intentos, reintenta en {int(LOGIN_WINDOW - (now - attempts[0])) + 1}s"
+    attempts.append(now)
+    _login_attempts[ip] = attempts
+    if len(_login_attempts) > 5000:
+        _login_attempts.clear()
+    return None
+
+
 # ---------- Auth ----------
 @app.post("/api/auth/login", response_model=LoginOut)
-async def login(data: LoginIn, response: Response):
+async def login(data: LoginIn, request: Request, response: Response):
+    ip = _client_ip(request)
+    limited = _login_throttled(ip)
+    if limited:
+        raise HTTPException(status_code=429, detail=limited)
     user_ok = hmac.compare_digest(data.user, settings.admin_user)
     pass_ok = hmac.compare_digest(data.pass_, settings.admin_pass)
     if not (user_ok and pass_ok):
+        logger.warning(
+            "login fallido ip=%s ua=%s user=%s",
+            ip,
+            request.headers.get("user-agent", "?"),
+            data.user,
+        )
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
     token = make_token(data.user)
     response.set_cookie(
