@@ -42,6 +42,12 @@ class ContactIn(BaseModel):
     whatsapp: str | None = Field(default=None, max_length=50)
     website: str | None = Field(default=None, max_length=200)
 
+    @field_validator("name", "message")
+    @classmethod
+    def _strip_html(cls, value: str) -> str:
+        # Sin tags en el contenido del form: neutraliza XSS persistido
+        return re.sub(r"<[^>]*>", "", value).strip()
+
     @field_validator("whatsapp")
     @classmethod
     def _clean_whatsapp(cls, value: str | None) -> str | None:

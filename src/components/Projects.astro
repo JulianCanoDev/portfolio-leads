@@ -132,7 +132,12 @@ const payload = Object.fromEntries(
 </section>
 
 <!-- Case-study data consumed by the modal -->
-<script type="application/json" id="projects-data" is:inline set:html={JSON.stringify(payload)} />
+<script
+  type="application/json"
+  id="projects-data"
+  is:inline
+  set:html={JSON.stringify(payload).replace(/</g, '\u003c')}
+/>
 
 <!-- ================= MODAL ================= -->
 <div class="modal" id="project-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">

@@ -158,7 +158,12 @@ const statChips = [
     )
   }
 
-<script type="application/json" id="leads-data" is:inline set:html={JSON.stringify(Object.fromEntries(items.map((lead) => [lead.id, lead])))} />
+<script
+  type="application/json"
+  id="leads-data"
+  is:inline
+  set:html={JSON.stringify(Object.fromEntries(items.map((lead) => [lead.id, lead]))).replace(/</g, '\u003c')}
+/>
 
 <div class="modal" id="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lmTitle">
   <div class="modal-backdrop" data-close></div>

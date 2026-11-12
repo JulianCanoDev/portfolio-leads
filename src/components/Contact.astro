@@ -124,7 +124,12 @@ const socials = [
   </div>
 </footer>
 
-<script type="application/json" id="cc-data" is:inline set:html={JSON.stringify(CC_COUNTRIES)} />
+<script
+  type="application/json"
+  id="cc-data"
+  is:inline
+  set:html={JSON.stringify(CC_COUNTRIES).replace(/</g, '\u003c')}
+/>
 <script>
   import { t } from '../i18n/index';
 
