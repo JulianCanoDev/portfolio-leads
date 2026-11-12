@@ -595,12 +595,23 @@ section {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* La imagen flota apenas por encima del plano; su sombra y el fundido
+   inferior evitan el corte duro contra el cuerpo de la card. */
 .case[data-tilt] .case-cover {
-  transform: translateZ(26px);
+  transform: translateZ(14px);
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.55);
+}
+
+.case[data-tilt] .case-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 62%, rgba(17, 17, 25, 0.55) 88%, rgba(17, 17, 25, 0.92));
 }
 
 .case[data-tilt] .case-body {
-  transform: translateZ(12px);
+  transform: translateZ(6px);
 }
 
 /* Cards de proyectos VR: el 3D es el producto — más profundidad */
@@ -609,11 +620,11 @@ section {
 }
 
 .case.vr-deep[data-tilt] .case-cover {
-  transform: translateZ(48px);
+  transform: translateZ(22px);
 }
 
 .case.vr-deep[data-tilt] .case-body {
-  transform: translateZ(20px);
+  transform: translateZ(9px);
 }
 
 .case-cover {
