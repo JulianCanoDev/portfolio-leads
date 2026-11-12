@@ -320,7 +320,9 @@ async def get_config_row(db: AsyncSession) -> Config:
 async def lifespan(_: FastAPI):
     os.makedirs(get_settings().upload_dir, exist_ok=True)
     await init_db()
+    worker = asyncio.create_task(_evoutbox_worker())
     yield
+    worker.cancel()
 
 
 app = FastAPI(title="JuliXR Portfolio API", lifespan=lifespan)
@@ -340,11 +342,69 @@ async def health(db: AsyncSession = Depends(get_db)):
 
 
 # ---------- Evolution API: notificación de leads por WhatsApp ----------
+# Outbox anti-ban: los envíos a un mismo chat pasan por una escalera de ritmo
+# (1º delay base humanizado; 2º +2s; 3º +5s; 4º+ +10s; reset tras 30s de
+# silencio), con "typing…" activado SOLO cuando el envío ya está decidido
+# y acotado al tiempo de tipeo real (gracia 3s, techo 90s). Nunca se
+# fragmenta un mensaje: cada lead es un único texto cohesivo.
 logger = logging.getLogger("voty.notify")
 
+PACING_LADDER = [0.0, 2.0, 5.0, 10.0]
+PACING_RESET_SILENCE = 30.0
+TYPING_GRACE_S = 3.0
+TYPING_MAX_S = 90.0
 
-async def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, message: str):
-    """Fire-and-forget: nunca rompe el alta del lead si Evolution falla."""
+_evoutbox: asyncio.Queue[str] = asyncio.Queue()
+_pacer_state: dict[str, tuple[float, int]] = {}  # chat -> (last_sent_ts, consecutive)
+
+
+def _humanized_base_delay() -> float:
+    return random.uniform(2.0, 5.0)
+
+
+async def _evo_send_text(client: httpx.AsyncClient, number: str, text: str, typing_s: float) -> None:
+    res = await client.post(
+        f"{settings.evo_api_url}/message/sendText/{settings.evo_instance}",
+        headers={"apikey": settings.evo_api_key},
+        json={
+            "number": number,
+            "text": text,
+            "presence": "composing",
+            "delay": int(typing_s * 1000),
+        },
+    )
+    res.raise_for_status()
+
+
+async def _evoutbox_worker() -> None:
+    chat = settings.evo_notify_number
+    while True:
+        texto = await _evoutbox.get()
+        if not settings.evo_api_key:
+            _evoutbox.task_done()
+            continue
+        try:
+            now = asyncio.get_event_loop().time()
+            last_ts, consecutive = _pacer_state.get(chat, (0.0, 0))
+            consecutive = consecutive + 1 if now - last_ts < PACING_RESET_SILENCE else 1
+            extra = PACING_LADDER[min(consecutive, len(PACING_LADDER)) - 1]
+            wait_s = (_humanized_base_delay() + extra) * random.uniform(0.85, 1.2)
+
+            # Typing solo cuando el envío ya está decidido; visible mientras
+            # esperamos el turno de la escalera (techo de seguridad 90s).
+            typing_s = min(max(wait_s + TYPING_GRACE_S, TYPING_GRACE_S), TYPING_MAX_S)
+            await asyncio.sleep(wait_s)
+            async with httpx.AsyncClient(timeout=15) as client:
+                await _evo_send_text(client, chat, texto, typing_s)
+            _pacer_state[chat] = (asyncio.get_event_loop().time(), consecutive)
+        except Exception:
+            logger.warning("Evolution API: no se pudo notificar el lead", exc_info=True)
+        finally:
+            _evoutbox.task_done()
+
+
+def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, message: str) -> None:
+    """Encola la notificación (fire-and-forget); nunca rompe el alta del lead."""
     if not settings.evo_api_key:
         return
     lead_wa = whatsapp or "(no compartió)"
@@ -357,24 +417,7 @@ async def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, m
         f"\U0001F4AC *Mensaje:* {message}\n\n"
         f"\U0001F550 {ahora} UTC"
     )
-    try:
-        # Simulación de tipeo: "escribiendo…" visible 1.2–2.8 s antes de
-        # enviar, para reducir el riesgo de ban del número por patrones
-        # 100% instantáneos de Meta.
-        async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.post(
-                f"{settings.evo_api_url}/message/sendText/{settings.evo_instance}",
-                headers={"apikey": settings.evo_api_key},
-                json={
-                    "number": settings.evo_notify_number,
-                    "text": texto,
-                    "presence": "composing",
-                    "delay": random.randint(1200, 2800),
-                },
-            )
-            res.raise_for_status()
-    except Exception:
-        logger.warning("Evolution API: no se pudo notificar el lead", exc_info=True)
+    _evoutbox.put_nowait(texto)
 
 
 # ---------- Anti-flood del formulario público ----------
@@ -468,10 +511,8 @@ async def create_lead(
     )
     db.add(lead)
     await db.commit()
-    asyncio.create_task(
-        notify_lead_by_whatsapp(
-            data.name.strip(), str(data.email), lead.whatsapp, data.message.strip()
-        )
+    notify_lead_by_whatsapp(
+        data.name.strip(), str(data.email), lead.whatsapp, data.message.strip()
     )
     return ContactOut(id=lead.id)
 

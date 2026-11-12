@@ -92,6 +92,15 @@ POST   /api/projects/generate-upload-url
 POST   /api/upload/{token}   (multipart: file, sin sesión)
 ```
 
+## Anti-ban (WhatsApp/Evolution)
+
+Las notificaciones no se envían directo: pasan por un outbox con escalera de
+ritmo por chat (1º delay base 2-5s; 2º consecutivo +2s; 3º +5s; 4º+ +10s;
+reset tras 30s de silencio), jitter ±20%, `presence=composing` solo con el
+envío ya decidido (gracia 3s, techo 90s) y un único mensaje cohesivo por
+lead (nunca fragmentado). Conexión/reconexión/heartbeat de la sesión son
+responsabilidad del runtime de Evolution (Baileys), no de esta API.
+
 ## Reglas
 
 1. Verificar leads nuevos antes de ofrecer ayuda.
