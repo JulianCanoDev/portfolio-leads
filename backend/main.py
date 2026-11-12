@@ -488,13 +488,14 @@ async def create_lead(
     if data.website:
         return ContactOut(id=0, status="ok")
 
-    # Rate limit por IP
-    limited = _rate_limited(ip)
-    if limited:
-        raise HTTPException(status_code=429, detail=limited)
-
-    # Agents autenticados (Bearer) pasan; browsers deben traer Origin válido…
-    if not _has_admin_token(request):
+    # Agents autenticados (Bearer): de confianza, sin rate limit (tests/automatización)
+    if _has_admin_token(request):
+        pass
+    else:
+        # Rate limit por IP solo para el flujo público
+        limited = _rate_limited(ip)
+        if limited:
+            raise HTTPException(status_code=429, detail=limited)
         if not _origin_allowed(request):
             raise HTTPException(status_code=403, detail="origen no permitido")
         # …y el nonce CSRF double-submit (cookie cf_token == header X-CSRF-Token)
