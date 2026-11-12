@@ -29,9 +29,15 @@ También existe `POST /api/auth/logout` (borra la cookie de sesión).
 GET  /api/health
 → {"status": "ok", "total": 0}
 
-POST /api/contact
+POST /api/contact   ← ENDURECIDO (anti-flood)
 {"name": "...", "email": "...", "message": "...", "whatsapp": "+57300123456"}
 → 201 {"id": 1, "status": "ok"}    (whatsapp es opcional)
+
+Reglas del endpoint: rate limit 1/IP/30s y 5/IP/hora; honeypot `website`
+(solo bots lo llenan); browsers requieren Origin válido + cookie cf_token
+echo en header `X-CSRF-Token`. **Agentes: enviar `Origin:
+https://portfolio.julixr.com` o un `Authorization: Bearer` válido.**
+403 = origen/CSRF, 429 = rate limit.
 
 GET  /api/settings
 → { name, role_title: {es,en}, tagline: {es,en}, description: {es,en},

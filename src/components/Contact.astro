@@ -91,6 +91,10 @@ const socials = [
               <input id="whatsapp" name="whatsapp" type="tel" placeholder={t('contact.ph.whatsapp')} pattern="[0-9]{7,15}" />
             </div>
           </div>
+          <div class="field hp-field" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
           <div class="field">
             <label for="message">{t('contact.message')}</label>
             <textarea id="message" name="message" placeholder={t('contact.ph.message')} required></textarea>
@@ -253,11 +257,30 @@ const socials = [
     if (submitBtn) submitBtn.disabled = true;
 
     try {
+      const csrfCookie = document.cookie
+        .split('; ')
+        .find((c) => c.startsWith('cf_token='))
+        ?.split('=')[1];
       const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name, email, message: msg, whatsapp: fullWa }),
+        headers: { 'content-type': 'application/json', 'X-CSRF-Token': csrfCookie ?? '' },
+        body: JSON.stringify({
+          name,
+          email,
+          message: msg,
+          whatsapp: fullWa,
+          website: (form.querySelector('#website') as HTMLInputElement)?.value ?? '',
+        }),
       });
+      if (res.status === 429) {
+        const detail = (await res.json().catch(() => ({}))) as { detail?: string };
+        if (status) {
+          status.textContent = detail.detail ?? t('contact.blocked');
+          status.style.color = '#fbbf24';
+          status.classList.add('show');
+        }
+        return;
+      }
       if (!res.ok) throw new Error(String(res.status));
       if (status) {
         status.textContent = t('contact.thanks');

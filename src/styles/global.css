@@ -1140,6 +1140,15 @@ body {
   border-color: var(--accent-glow);
 }
 
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+}
+
 /* ---------- Lead detail ---------- */
 .lead-panel {
   width: min(640px, 100%);

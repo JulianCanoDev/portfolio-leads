@@ -160,5 +160,6 @@
   "leads.detail.title": "Detalle del lead",
   "leads.detail.reply": "Responder",
   "leads.detail.received": "Recibido",
-  "contact.wa.error": "Revisá el número: para {iso} son entre {min} y {max} dígitos"
+  "contact.wa.error": "Revisá el número: para {iso} son entre {min} y {max} dígitos",
+  "contact.blocked": "Demasiados mensajes. Esperá un momento y probá de nuevo."
 }

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # Imágenes subidas (volumen compartido con nginx)
     upload_dir: str = Field(default="/srv/uploads")
 
+    # Dominio público permitido para Origin/Referer en /api/contact
+    site_domain: str = Field(default="portfolio.julixr.com")
+
     # Evolution API — notificación de leads por WhatsApp
     evo_api_url: str = Field(default="https://evolution.example.com")
     evo_instance: str = Field(default="")

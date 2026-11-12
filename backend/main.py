@@ -40,6 +40,7 @@ class ContactIn(BaseModel):
     email: EmailStr
     message: str = Field(min_length=1, max_length=5000)
     whatsapp: str | None = Field(default=None, max_length=50)
+    website: str | None = Field(default=None, max_length=200)
 
     @field_validator("whatsapp")
     @classmethod
@@ -376,8 +377,85 @@ async def notify_lead_by_whatsapp(name: str, email: str, whatsapp: str | None, m
         logger.warning("Evolution API: no se pudo notificar el lead", exc_info=True)
 
 
+# ---------- Anti-flood del formulario público ----------
+CONTACT_MIN_INTERVAL = 30.0
+CONTACT_HOURLY_MAX = 5
+_recent_hits: dict[str, list[float]] = {}
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "?")
+
+
+def _rate_limited(ip: str) -> str | None:
+    import time as _time
+
+    now = _time.time()
+    hits = [t for t in _recent_hits.get(ip, []) if now - t < 3600]
+    if hits and now - hits[-1] < CONTACT_MIN_INTERVAL:
+        return f"espera {int(CONTACT_MIN_INTERVAL - (now - hits[-1])) + 1}s entre mensajes"
+    if len(hits) >= CONTACT_HOURLY_MAX:
+        return "demasiados mensajes en la última hora"
+    hits.append(now)
+    _recent_hits[ip] = hits
+    if len(_recent_hits) > 5000:
+        _recent_hits.clear()
+    return None
+
+
+def _origin_allowed(request: Request) -> bool:
+    origin = request.headers.get("origin") or request.headers.get("referer") or ""
+    if not origin:
+        return False
+    try:
+        host = (request.url.hostname or "").lower()
+        allowed = {settings.site_domain.lower(), "localhost", "127.0.0.1", host}
+        return (origin.split("//", 1)[-1].split("/")[0].split(":")[0].lower() in allowed)
+    except Exception:
+        return False
+
+
+def _has_admin_token(request: Request) -> bool:
+    token = extract_token(request)
+    if not token:
+        return False
+    try:
+        jwt.decode(token, settings.jwt_secret, algorithms=[JWT_ALGORITHM])
+        return True
+    except jwt.PyJWTError:
+        return False
+
+
 @app.post("/api/contact", response_model=ContactOut, status_code=201)
-async def create_lead(data: ContactIn, db: AsyncSession = Depends(get_db)):
+async def create_lead(
+    data: ContactIn,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    ip = _client_ip(request)
+
+    # Honeypot: campo invisible que solo los bots llenan — éxito falso, nada se guarda
+    if data.website:
+        return ContactOut(id=0, status="ok")
+
+    # Rate limit por IP
+    limited = _rate_limited(ip)
+    if limited:
+        raise HTTPException(status_code=429, detail=limited)
+
+    # Agents autenticados (Bearer) pasan; browsers deben traer Origin válido…
+    if not _has_admin_token(request):
+        if not _origin_allowed(request):
+            raise HTTPException(status_code=403, detail="origen no permitido")
+        # …y el nonce CSRF double-submit (cookie cf_token == header X-CSRF-Token)
+        cookie_token = request.cookies.get("cf_token", "")
+        header_token = request.headers.get("x-csrf-token", "")
+        if not cookie_token or cookie_token != header_token:
+            raise HTTPException(status_code=403, detail="token CSRF invalido")
+
     lead = Lead(
         name=data.name.strip(),
         email=str(data.email),
@@ -459,6 +537,16 @@ async def get_lead(lead_id: int, db: AsyncSession = Depends(get_db)):
     if lead is None:
         raise HTTPException(status_code=404, detail="Lead not found")
     return lead
+
+
+@app.delete("/api/leads/{lead_id}", dependencies=[Depends(require_admin)])
+async def delete_lead(lead_id: int, db: AsyncSession = Depends(get_db)):
+    lead = await db.get(Lead, lead_id)
+    if lead is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    await db.delete(lead)
+    await db.commit()
+    return {"ok": True}
 
 
 @app.patch("/api/leads/{lead_id}", response_model=LeadOut, dependencies=[Depends(require_admin)])

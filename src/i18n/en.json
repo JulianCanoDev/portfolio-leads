@@ -159,5 +159,6 @@
   "leads.detail.title": "Lead detail",
   "leads.detail.reply": "Reply",
   "leads.detail.received": "Received",
-  "contact.wa.error": "Check the number: {iso} uses {min} to {max} digits"
+  "contact.wa.error": "Check the number: {iso} uses {min} to {max} digits",
+  "contact.blocked": "Too many messages. Please wait a moment and try again."
 }
